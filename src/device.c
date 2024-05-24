@@ -18,3 +18,10 @@ Device initDevice(const char *interface, const char *ip, int mask) {
 
     return device;
 }
+
+void destroyDevice(Device *device) {
+    free(device->interface);
+    free(device->ip);
+    device->interface = NULL;
+    device->ip = NULL;
+}

@@ -8,5 +8,6 @@ typedef struct {
 } Device;
 
 Device initDevice(const char *interface, const char *ip, int mask);
+void destroyDevice(Device *device);
 
 #endif

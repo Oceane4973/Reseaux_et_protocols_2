@@ -9,6 +9,8 @@ int main() {
         return 1;
     }
 
+
+
     // Exemple de création d'un routeur avec deux appareils
     Device devices[] = {
         {"eth0", "127.0.0.1", 24},

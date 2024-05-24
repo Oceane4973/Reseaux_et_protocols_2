@@ -21,6 +21,10 @@ main: $(BUILDDIR)/main.o $(BUILDDIR)/router.o $(BUILDDIR)/device.o
 client: $(BUILDDIR)/client.o
 	$(CC) $(CFLAGS) $^ -o client
 
+# Règle pour construire le programme de test
+unitTest: $(BUILDDIR)/unitTest.o
+	$(CC) $(CFLAGS) $^ -o unitTest.c
+
 # Règle pour nettoyer les fichiers objets
 clean:
 	rm -f $(BUILDDIR)/*.o main client
