@@ -11,14 +11,13 @@ deploy_device() {
     IP=$3
     MASK=$4
     PORT=$5
-    # Afficher les informations du dispositif
     echo "----------------------------------------"
-    #echo "Router: $ROUTER"
-    #echo "IP: $IP/$MASK :$PORT"
-    #echo "Interface: $INTERFACE"
     
     DEVICE="${ROUTER}_${INTERFACE}"
-    #delete_device $DEVICE
+
+    if ip addr show "$DEVICE" &> /dev/null; then
+        elete_device $DEVICE
+    fi
 
     ip link add $DEVICE type dummy
     ip link set $DEVICE multicast on

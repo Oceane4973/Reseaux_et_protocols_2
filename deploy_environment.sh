@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source scripts/virtual_interface.sh
+source scripts/deploy_virtual_ips.sh
 
 CONFIG_FILE="config.yaml"
 
