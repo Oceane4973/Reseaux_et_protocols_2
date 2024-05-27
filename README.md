@@ -26,23 +26,23 @@ Chaque adresse IP virtuelle sera associée à un Socket écoutant sur le port 85
 ```yaml
 routers:
   - name: R1
-	port: 8520
-	devices:
-	  - interface: eth0
-		ip: 127.0.0.1
-		mask: 24
-	  - interface: eth1
-		ip: 192.1.1.2
-		mask: 24
+        port: 8520
+        devices:
+          - interface: eth0
+                ip: 127.0.0.1
+                mask: 24
+          - interface: eth1
+                ip: 192.1.1.2
+                mask: 24
   - name: R2
-	port: 8520
-	devices:
-	  - interface: eth0
-		ip: 192.1.1.3
-		mask: 24
-	  - interface: eth1
-		ip: 192.1.2.3
-		mask: 24
+        port: 8520
+        devices:
+          - interface: eth0
+                ip: 192.1.1.3
+                mask: 24
+          - interface: eth1
+                ip: 192.1.2.3
+                mask: 24
 ```
 2. Exécuter le script `deploy_environment.sh` pour configurer les adresses IP virtuelles en utilisant les configurations spécifiées dans le fichier `config.yaml`.
 ```bash
