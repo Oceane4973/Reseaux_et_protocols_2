@@ -1,5 +1,3 @@
-#include "router.h"
-#include "utils.c"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,9 +8,11 @@
 #include <pthread.h>
 #include <sys/select.h>
 #include <arpa/inet.h>
+#include "router.h"
 
 typedef struct {
     Device *device;
+    char *routerName;
     int port;
 } ThreadArg;
 
@@ -110,7 +110,7 @@ void *deviceThread(void *arg) {
     // Configuration de l'adresse pour le socket UDP
     udpAddr.sin_family = AF_INET;
     udpAddr.sin_addr.s_addr = inet_addr(broadcast_adrr);
-    udpAddr.sin_port = htons(devicePort);
+    udpAddr.sin_port = htons(BROADCAST_PORT);
 
     // Liaison du socket UDP pour écouter sur toutes les interfaces
     if (bind(udpSocket, (struct sockaddr *)&udpAddr, sizeof(udpAddr)) < 0) {
@@ -118,7 +118,7 @@ void *deviceThread(void *arg) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Device %s : listening on %s:%d and %s for broadcast \n", device->interface, device->ip, devicePort, broadcast_adrr);
+    printf("%s_%s    listening on %s:%d and %s:%i for broadcast \n", thread_arg->routerName, device->interface, device->ip, devicePort, broadcast_adrr, BROADCAST_PORT);
 
     // Boucle principale pour la réception des messages
     while (1) {
@@ -151,7 +151,7 @@ void *deviceThread(void *arg) {
                 exit(EXIT_FAILURE);
             }
 
-            printf("Connection accepted from %s:%d\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+            printf("%s_%s    Connection accepted from %s:%d\n", thread_arg->routerName, device->interface, inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
 
             // Réception des données du client
             bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
@@ -163,11 +163,11 @@ void *deviceThread(void *arg) {
             buffer[bytesReceived] = '\0'; // Assurez-vous que le tampon est nul-terminé
 
             // Traitement des données reçues (exemple de vérification)
-            if (strcmp(buffer, "broadcast") == 0) {
-                const char *message = "hello world";
-                send(clientSocket, message, strlen(message), 0);
-                printf("Sent: %s\n", message);
-            }
+            //if (strcmp(buffer, "broadcast") == 0) {
+            const char *message = "hello world";
+            send(clientSocket, message, strlen(message), 0);
+            printf("%s_%s    Sent: %s\n", thread_arg->routerName,device->interface, message);
+            //}
 
             // Fermeture de la connexion avec le client
             close(clientSocket);
@@ -185,7 +185,7 @@ void *deviceThread(void *arg) {
             }
             buffer[bytesReceived] = '\0'; // Assurez-vous que le tampon est nul-terminé
 
-            printf("Broadcast received from %s:%d: %s\n", inet_ntoa(senderAddr.sin_addr), ntohs(senderAddr.sin_port), buffer);
+            printf("%s_%s    Broadcast received from %s:%d: %s\n", thread_arg->routerName, device->interface, inet_ntoa(senderAddr.sin_addr), ntohs(senderAddr.sin_port), buffer);
 
             // Vous pouvez traiter les messages de broadcast ici
         }
@@ -194,6 +194,8 @@ void *deviceThread(void *arg) {
     free(device->interface);
     free(device->ip);
     free(device);
+    free(thread_arg->device);
+    free(thread_arg->routerName);
     free(thread_arg);
 
     close(tcpSocket);
@@ -218,6 +220,7 @@ void startRouter(Router router) {
 
         // Assignation du port
         thread_arg->port = router.port;
+        thread_arg->routerName = router.name;
 
         // Création du thread avec la structure comme argument
         if (pthread_create(&threads[i], NULL, deviceThread, thread_arg) != 0) {
@@ -232,4 +235,45 @@ void startRouter(Router router) {
             exit(EXIT_FAILURE);
         }
     }
+}
+
+char* calculate_broadcast_address(const char* ip_address, const int cidr) {
+    // Vérification des arguments
+    if (ip_address == NULL || cidr < 0 || cidr > 32) {
+        return NULL;
+    }
+
+    // Allocation de mémoire pour l'adresse de diffusion
+    char* broadcast_address = (char*)malloc(16 * sizeof(char)); // 16 pour une adresse IP IPv4 maximale
+
+    if (broadcast_address == NULL) {
+        return NULL; // Échec de l'allocation de mémoire
+    }
+
+    // Copie de l'adresse IP dans une variable modifiable
+    char ip_copy[16]; // 16 pour une adresse IP IPv4 maximale
+    strcpy(ip_copy, ip_address);
+
+    // Calcul du masque de sous-réseau
+    unsigned long subnet_mask = 0xFFFFFFFFUL << (32 - cidr);
+
+    // Conversion de l'adresse IP en entier sans le CIDR
+    unsigned long ip = 0;
+    char* token = strtok(ip_copy, ".");
+    for (int i = 0; i < 4 && token != NULL; i++) {
+        ip |= atol(token) << ((3 - i) * 8);
+        token = strtok(NULL, ".");
+    }
+
+    // Calcul de l'adresse de diffusion
+    unsigned long broadcast = (ip & subnet_mask) | (~subnet_mask);
+
+    // Conversion de l'adresse de diffusion en format de chaîne
+    sprintf(broadcast_address, "%lu.%lu.%lu.%lu",
+            (broadcast >> 24) & 0xFF,
+            (broadcast >> 16) & 0xFF,
+            (broadcast >> 8) & 0xFF,
+            broadcast & 0xFF);
+
+    return broadcast_address;
 }

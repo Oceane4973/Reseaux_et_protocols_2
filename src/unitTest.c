@@ -1,16 +1,17 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h> // Ajout de l'inclusion de stdlib.h
-#include "router.c"
-#include "device.c"
-
+#include "router.h"
+#include "parser.h"
 
 void test_calculate_broadcast_address();
+void test_yaml_file_parser();
 void test_device_and_router_constructors();
 
 int main() {
     test_device_and_router_constructors();
     test_calculate_broadcast_address();
+    test_yaml_file_parser();
     
     return 0;
 }
@@ -64,4 +65,58 @@ void test_device_and_router_constructors() {
     assert(my_router.devices == NULL);
 
     printf("Test Passed: destroyRouter().\n");
+}
+
+void test_yaml_file_parser(){
+    const char *yaml_content = 
+    "routers:\n"
+    "  - name: R1\n"
+    "    port: 8520\n"
+    "    devices:\n"
+    "      - interface: eth0\n"
+    "        ip: 127.0.0.1\n"
+    "        mask: 24\n"
+    "      - interface: eth1\n"
+    "        ip: 192.1.1.2\n"
+    "        mask: 24\n"
+    "  - name: R2\n"
+    "    port: 8520\n"
+    "    devices:\n"
+    "      - interface: eth0\n"
+    "        ip: 192.1.1.3\n"
+    "        mask: 24\n";
+
+    FILE *file = fmemopen((void *)yaml_content, strlen(yaml_content), "r");
+
+    Router* routers = parse_yaml_file(file);
+    const int num_routers = routers->num_devices;
+
+    assert(num_routers == 2);
+
+    assert(strcmp(routers[0].name, "R1") == 0);
+    assert(routers[0].port == 8520);
+
+    assert(strcmp(routers[1].name, "R2") == 0);
+    assert(routers[1].port == 8520);
+
+    assert(routers[0].num_devices == 2);
+    assert(routers[1].num_devices == 1);
+
+    assert(strcmp(routers[0].devices[0].interface,"eth0")==0);
+    assert(strcmp(routers[0].devices[0].ip,"127.0.0.1")==0);
+    assert(routers[0].devices[0].mask == 24);
+
+    assert(strcmp(routers[0].devices[1].interface,"eth1")==0);
+    assert(strcmp(routers[0].devices[1].ip,"192.1.1.2")==0);
+    assert(routers[0].devices[1].mask == 24);
+
+    assert(strcmp(routers[1].devices[0].interface,"eth0")==0);
+    assert(strcmp(routers[1].devices[0].ip,"192.1.1.3")==0);
+    assert(routers[1].devices[0].mask == 24);
+
+    printf("Test Passed: parse_yaml_file().\n");
+    
+    for (int i = 0; i < num_routers; i++) {
+        destroyRouter(&routers[i]);
+    }
 }

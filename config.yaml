@@ -8,4 +8,13 @@ routers:
       - interface: eth1
         ip: 192.1.1.2
         mask: 24
+  - name: R2
+    port: 8520
+    devices:
+      - interface: eth0
+        ip: 192.1.1.3
+        mask: 24
+      - interface: eth1
+        ip: 192.1.2.3
+        mask: 24
   

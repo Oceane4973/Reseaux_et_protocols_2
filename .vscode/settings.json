@@ -2,6 +2,7 @@
     "files.associations": {
         "common.C": "cpp",
         "typeinfo": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "cstdlib": "c"
     }
 }

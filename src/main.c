@@ -1,24 +1,34 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "parser.h"
 #include "router.h"
 
 int main() {
-    // Ouverture du fichier config.yaml en mode lecture
-    FILE *file = fopen("config.yaml", "rb");
+    // Ouverture du fichier YAML
+    FILE *file = fopen("config.yaml", "r");
     if (!file) {
-        fprintf(stderr, "Erreur lors de l'ouverture du fichier config.yaml\n");
-        return 1;
+        perror("Failed to open file");
+        return EXIT_FAILURE;
     }
 
+    Router* routers = parse_yaml_file(file);
+    const int num_routers = routers->num_devices;
 
+    // Affichage des données lues
+    for (int i = 0; i < num_routers; i++) {
+        printf("Router Name: %s\n", routers[i].name ? routers[i].name : "Unknown");
+        for (int j = 0; j < routers[i].num_devices; j++) {
+            printf("Device %d: Interface: %s, IP: %s, Mask: %d\n", j + 1,
+                   routers[i].devices[j].interface ? routers[i].devices[j].interface : "Unknown",
+                   routers[i].devices[j].ip ? routers[i].devices[j].ip : "Unknown",
+                   routers[i].devices[j].mask);
+        }
+    }
 
-    // Exemple de création d'un routeur avec deux appareils
-    Device devices[] = {
-        {"eth0", "127.0.0.1", 24},
-        {"eth1", "192.1.1.2", 24}
-    };
-    Router my_router = {"R1", 8000, devices, 2};
-    // Démarrage du routeur
-    startRouter(my_router);
+    for (int i = 0; i < num_routers; i++) {
+        destroyRouter(&routers[i]);
+    }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
