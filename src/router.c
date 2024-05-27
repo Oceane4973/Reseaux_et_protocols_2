@@ -7,14 +7,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <sys/select.h>
-#include <arpa/inet.h>
 #include "router.h"
-
-typedef struct {
-    Device *device;
-    char *routerName;
-    int port;
-} ThreadArg;
 
 Router initRouter(const char *name, int port, Device *devices, int num_devices) {
     Router router;
@@ -41,8 +34,8 @@ void destroyRouter(Router *router) {
     router->name = NULL;
 }
 
-void *deviceThread(void *arg) {
-    ThreadArg *thread_arg = (ThreadArg *)arg;
+void *deviceThread(void *threadDevicesArg) {
+    ThreadDevicesArg *thread_arg = (ThreadDevicesArg *)threadDevicesArg;
 
     // Accès au périphérique et au port à partir de la structure
     Device *device = thread_arg->device;
@@ -203,12 +196,15 @@ void *deviceThread(void *arg) {
     pthread_exit(NULL);
 }
 
-void startRouter(Router router) {
+void *startRouter(void *threadRouterArg) {
+    ThreadRouterArg *data = (ThreadRouterArg *)threadRouterArg;
+    Router router = data->router;
+
     pthread_t threads[router.num_devices];
 
     for (int i = 0; i < router.num_devices; i++) {
         // Allocation mémoire pour la structure ThreadArg
-        ThreadArg *thread_arg = malloc(sizeof(ThreadArg));
+        ThreadDevicesArg *thread_arg = malloc(sizeof(ThreadDevicesArg));
         if (thread_arg == NULL) {
             perror("Memory allocation failed");
             exit(EXIT_FAILURE);
@@ -235,6 +231,11 @@ void startRouter(Router router) {
             exit(EXIT_FAILURE);
         }
     }
+
+    destroyRouter(&router);
+    free(data);
+
+    pthread_exit(NULL);
 }
 
 char* calculate_broadcast_address(const char* ip_address, const int cidr) {

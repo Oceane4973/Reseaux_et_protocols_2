@@ -16,10 +16,21 @@ typedef struct {
     int num_devices;
 } Router;
 
+typedef struct {
+    Device *device;
+    char *routerName;
+    int port;
+} ThreadDevicesArg;
+
+typedef struct {
+    Router router;
+} ThreadRouterArg ;
+
 // Déclaration des fonctions
 Router initRouter(const char *name, int port, Device *devices, int num_devices);
 void destroyRouter(Router *router);
-void startRouter(Router router);
+void *deviceThread(void *ThreadDevicesArg);
+void *startRouter(void *ThreadRouterArg);
 
 char* calculate_broadcast_address(const char* ip_address, const int cidr);
 

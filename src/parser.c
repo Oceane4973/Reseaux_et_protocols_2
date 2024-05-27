@@ -11,7 +11,7 @@ Router* parse_yaml_file(FILE *file) {
     if (!yaml_parser_initialize(&parser)) {
         perror("Failed to initialize YAML parser");
         fclose(file);
-        return EXIT_FAILURE;
+        exit(EXIT_FAILURE);
     }
 
     yaml_parser_set_input_file(&parser, file);
@@ -54,7 +54,7 @@ Router* parse_yaml_file(FILE *file) {
                         yaml_token_delete(&token);
                         yaml_parser_delete(&parser);
                         fclose(file);
-                        return EXIT_FAILURE;
+                        exit(EXIT_FAILURE);
                     }
 
                     current_router_index = num_routers;
@@ -79,7 +79,7 @@ Router* parse_yaml_file(FILE *file) {
                             yaml_token_delete(&token);
                             yaml_parser_delete(&parser);
                             fclose(file);
-                            return EXIT_FAILURE;
+                            exit(EXIT_FAILURE);
                         }
                         current_device_index = current_router->num_devices;
                         current_router->devices[current_device_index].interface = NULL;
