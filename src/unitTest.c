@@ -5,13 +5,15 @@
 #include "parser.h"
 
 void test_calculate_broadcast_address();
-void test_yaml_file_parser();
+void test_yaml_file_parser_to_router();
 void test_device_and_router_constructors();
+void test_yaml_file_parser_to_touting_table();
 
 int main() {
     test_device_and_router_constructors();
     test_calculate_broadcast_address();
-    test_yaml_file_parser();
+    test_yaml_file_parser_to_router();
+    test_yaml_file_parser_to_touting_table();
     
     return 0;
 }
@@ -68,7 +70,7 @@ void test_device_and_router_constructors() {
     printf("Test Passed: destroyRouter().\n");
 }
 
-void test_yaml_file_parser(){
+void test_yaml_file_parser_to_router(){
     const char *yaml_content = 
     "routers:\n"
     "  - name: R1\n"
@@ -92,7 +94,7 @@ void test_yaml_file_parser(){
     Routers* routers_list = parse_yaml_file_to_router(file);
     const int num_routers = routers_list->num_routers;
     Router* routers = routers_list->routers;
-    
+
     assert(num_routers == 2);
 
     assert(strcmp(routers[0].name, "R1") == 0);
@@ -116,9 +118,48 @@ void test_yaml_file_parser(){
     assert(strcmp(routers[1].devices[0].ip,"192.1.1.3")==0);
     assert(routers[1].devices[0].mask == 24);
 
-    printf("Test Passed: parse_yaml_file().\n");
+    printf("Test Passed: yaml_file_parser_to_router().\n");
     
     for (int i = 0; i < num_routers; i++) {
         destroyRouter(&routers[i]);
     }
+}
+
+void test_yaml_file_parser_to_touting_table(){
+    const char *yaml_content = 
+    "routes:\n"
+    "  - destination: 127.0.0.0\n"
+    "    mask: 24\n"
+    "    passerelle:\n"
+    "    interface: 127.0.0.1\n"
+    "    distance: 1\n"
+    "  - destination: 10.1.1.0\n"
+    "    mask: 30\n"
+    "    passerelle:\n"
+    "    interface: 10.1.1.2\n"
+    "    distance: 1\n";
+
+    FILE *file = fmemopen((void *)yaml_content, strlen(yaml_content), "r");
+
+    Routing_table* routing_table = parse_yaml_file_to_routing_table(file);
+    const int num_routes = routing_table->num_route;
+    Route* tables = routing_table->table;
+    
+    assert(num_routes == 2);
+
+    assert(strcmp(tables[0].destination, "127.0.0.0") == 0);
+    assert(tables[0].mask == 24);
+    assert(strcmp(tables[0].passerelle, "") == 0);
+    assert(strcmp(tables[0].interface, "127.0.0.1") == 0);
+    assert(tables[0].distance == 1);
+
+    assert(strcmp(tables[1].destination, "10.1.1.0") == 0);
+    assert(tables[1].mask == 30);
+    assert(strcmp(tables[1].passerelle, "") == 0);
+    assert(strcmp(tables[1].interface, "10.1.1.2") == 0);
+    assert(tables[1].distance == 1);
+
+    printf("Test Passed: parse_yaml_file_to_routing_table().\n");
+    
+    destroyRoutingTable(routing_table);
 }

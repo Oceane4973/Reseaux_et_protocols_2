@@ -31,6 +31,11 @@ typedef struct {
     Router router;
 } ThreadRouterArg ;
 
+typedef struct {
+    Router *routers;
+    int num_routers;
+} Routers;
+
 // Déclaration des fonctions
 Router initRouter(const char *name, int port, Device *devices, int num_devices);
 void destroyRouter(Router *router);
