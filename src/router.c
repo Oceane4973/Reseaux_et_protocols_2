@@ -173,7 +173,7 @@ void *deviceThread(void *threadDevicesArg) {
             //if (strcmp(buffer, "broadcast") == 0) {
             const char *message = "hello world";
             send(clientSocket, message, strlen(message), 0);
-            printf("%s_%s    Sent: %s\n", thread_arg->router->name,device->interface, message);
+            printf("%s_%s    Sent: \n%s\n", thread_arg->router->name,device->interface, message);
             //}
 
             // Fermeture de la connexion avec le client
@@ -185,14 +185,14 @@ void *deviceThread(void *threadDevicesArg) {
         ------------------------------ */
 
         if (FD_ISSET(udpSocket, &readfds)) {
+            
             int bytesReceived = recvfrom(udpSocket, buffer, BUFFER_SIZE - 1, 0, (struct sockaddr *)&udpAddr, &addrLen);
             if (bytesReceived < 0) {
                 perror("Receive failed");
                 continue;
             }
             buffer[bytesReceived] = '\0';
-            printf("%s_%s    Broadcast on %s:%i received \"%s\" \n", thread_arg->router->name, device->interface, broadcast_adrr, BROADCAST_PORT, buffer);
-            displayRoutingTable(thread_arg->router->routing_table);
+            printf("%s_%s    Broadcast on %s:%i received \n\"%s\" \n", thread_arg->router->name, device->interface, broadcast_adrr, BROADCAST_PORT, buffer);
         }
     }
 
