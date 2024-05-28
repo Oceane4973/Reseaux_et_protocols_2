@@ -47,9 +47,9 @@ void *deviceThread(void *threadDevicesArg) {
     char buffer[MAX_BUFFER_SIZE];
     ssize_t bytesReceived;
     struct sockaddr_in senderAddr;
-    socklen_t addrLen = sizeof(senderAddr);
     fd_set readfds;
     int max_fd;
+    socklen_t addrLen = sizeof(udpAddr);
     char* broadcast_adrr = calculate_broadcast_address(device->ip, device->mask);
 
     /* ------------------------------
@@ -171,16 +171,13 @@ void *deviceThread(void *threadDevicesArg) {
         ------------------------------ */
 
         if (FD_ISSET(udpSocket, &readfds)) {
-            bytesReceived = recvfrom(udpSocket, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&senderAddr, &addrLen);
+            int bytesReceived = recvfrom(udpSocket, buffer, BUFFER_SIZE - 1, 0, (struct sockaddr *)&udpAddr, &addrLen);
             if (bytesReceived < 0) {
                 perror("Receive failed");
                 continue;
             }
-            buffer[bytesReceived] = '\0'; // Assurez-vous que le tampon est nul-terminé
-
-            printf("%s_%s    Broadcast received from %s:%d: %s\n", thread_arg->routerName, device->interface, inet_ntoa(senderAddr.sin_addr), ntohs(senderAddr.sin_port), buffer);
-
-            // Vous pouvez traiter les messages de broadcast ici
+            buffer[bytesReceived] = '\0';
+            printf("Received: %s\n", buffer);
         }
     }
 
