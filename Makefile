@@ -18,7 +18,7 @@ main: $(BUILDDIR)/main.o $(BUILDDIR)/router.o $(BUILDDIR)/device.o $(BUILDDIR)/p
 	$(CC) $(CFLAGS) $^ -o main -lyaml
 
 # Règle pour construire le programme client
-client: $(BUILDDIR)/client.o
+client: $(BUILDDIR)/client.o $(BUILDDIR)/connection.o 
 	$(CC) $(CFLAGS) $^ -o client
 
 # Règle pour construire le programme de test

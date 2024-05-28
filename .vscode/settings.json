@@ -3,6 +3,7 @@
         "common.C": "cpp",
         "typeinfo": "c",
         "stdlib.h": "c",
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "socket.h": "c"
     }
 }

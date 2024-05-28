@@ -111,7 +111,7 @@ void *deviceThread(void *threadDevicesArg) {
         exit(EXIT_FAILURE);
     }
 
-    printf("%s_%s    listening on %s:%d and %s:%i for broadcast \n", thread_arg->routerName, device->interface, device->ip, devicePort, broadcast_adrr, BROADCAST_PORT);
+    printf("%s_%s    Listening on %s:%d and %s:%i for broadcast \n", thread_arg->routerName, device->interface, device->ip, devicePort, broadcast_adrr, BROADCAST_PORT);
 
     // Boucle principale pour la réception des messages
     while (1) {
@@ -177,7 +177,7 @@ void *deviceThread(void *threadDevicesArg) {
                 continue;
             }
             buffer[bytesReceived] = '\0';
-            printf("Received: %s\n", buffer);
+            printf("%s_%s    Broadcast on %s:%i received \"%s\" \n", thread_arg->routerName, device->interface, broadcast_adrr, BROADCAST_PORT, buffer);
         }
     }
 
