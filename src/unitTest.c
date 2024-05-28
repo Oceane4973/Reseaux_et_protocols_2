@@ -56,6 +56,7 @@ void test_device_and_router_constructors() {
     assert(strcmp(my_router.name, "R1") == 0);
     assert(my_router.port == 8000);
     assert(my_router.num_devices == 2);
+    assert(strcmp(my_router.routing_table->routing_table_path, "config/R1/routing_table.yaml")==0);
 
     printf("Test Passed: initRouter().\n");
     
@@ -88,7 +89,7 @@ void test_yaml_file_parser(){
 
     FILE *file = fmemopen((void *)yaml_content, strlen(yaml_content), "r");
 
-    Router* routers = parse_yaml_file(file);
+    Router* routers = parse_yaml_file_to_router(file);
     const int num_routers = routers->num_devices;
 
     assert(num_routers == 2);

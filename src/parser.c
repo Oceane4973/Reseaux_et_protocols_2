@@ -4,7 +4,7 @@
 #include <yaml.h>
 #include "parser.h"
 
-Router* parse_yaml_file(FILE *file) {
+Router* parse_yaml_file_to_router(FILE *file) {
     // Initialisation de l'analyseur YAML
     yaml_parser_t parser;
     yaml_token_t token;

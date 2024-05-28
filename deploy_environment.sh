@@ -2,7 +2,7 @@
 
 source scripts/deploy_virtual_ips.sh
 
-CONFIG_FILE="config.yaml"
+CONFIG_FILE="config/config.yaml"
 
 read_config() {
     local file=$1

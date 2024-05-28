@@ -7,13 +7,13 @@
 
 int main() {
     // Ouverture du fichier YAML
-    FILE *file = fopen("config.yaml", "r");
+    FILE *file = fopen("config/config.yaml", "r");
     if (!file) {
         perror("Failed to open file");
         return EXIT_FAILURE;
     }
 
-    Router* routers = parse_yaml_file(file);
+    Router* routers = parse_yaml_file_to_router(file);
     const int num_routers = routers->num_devices;
 
     pthread_t threads[num_routers];

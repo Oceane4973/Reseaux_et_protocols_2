@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <sys/select.h>
 #include "router.h"
+#include "routing_table.h"
 
 Router initRouter(const char *name, int port, Device *devices, int num_devices) {
     Router router;
@@ -20,6 +21,12 @@ Router initRouter(const char *name, int port, Device *devices, int num_devices) 
         router.devices[i].mask = devices[i].mask;
     }
     router.num_devices = num_devices;
+
+    char routing_table_path[MAX_PATH_LENGTH];
+    sprintf(routing_table_path, "%s%s/routing_table.yaml", GLOBAL_ROUTING_TABLE_PATH, name);
+    
+    router.routing_table = initRoutingTable(routing_table_path);
+
     return router;
 }
 
@@ -27,10 +34,12 @@ void destroyRouter(Router *router) {
     for (int i = 0; i < router->num_devices; ++i) {
         destroyDevice(&(router->devices[i])); // Détruire les dispositifs
     }
+    destroyRoutingTable(router->routing_table);
     free(router->devices);
     free(router->name); // Libérer la mémoire du nom du routeur
 
     router->devices = NULL;
+    router->routing_table = NULL;
     router->name = NULL;
 }
 
@@ -46,7 +55,6 @@ void *deviceThread(void *threadDevicesArg) {
     int broadcastEnable = 1;
     char buffer[MAX_BUFFER_SIZE];
     ssize_t bytesReceived;
-    struct sockaddr_in senderAddr;
     fd_set readfds;
     int max_fd;
     socklen_t addrLen = sizeof(udpAddr);
