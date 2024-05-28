@@ -89,9 +89,10 @@ void test_yaml_file_parser(){
 
     FILE *file = fmemopen((void *)yaml_content, strlen(yaml_content), "r");
 
-    Router* routers = parse_yaml_file_to_router(file);
-    const int num_routers = routers->num_devices;
-
+    Routers* routers_list = parse_yaml_file_to_router(file);
+    const int num_routers = routers_list->num_routers;
+    Router* routers = routers_list->routers;
+    
     assert(num_routers == 2);
 
     assert(strcmp(routers[0].name, "R1") == 0);

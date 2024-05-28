@@ -13,14 +13,14 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    Router* routers = parse_yaml_file_to_router(file);
-    const int num_routers = routers->num_devices;
+    Routers* routers = parse_yaml_file_to_router(file);
+    const int num_routers = routers->num_routers;
 
     pthread_t threads[num_routers];
     ThreadRouterArg threadData[num_routers];
     
     for (int i = 0; i < num_routers; i++) {
-        threadData[i].router = routers[i];
+        threadData[i].router = routers->routers[i];
         pthread_create(&threads[i], NULL, startRouter, (void *)&threadData[i]);
     }
     
@@ -29,7 +29,7 @@ int main() {
     }
 
     for (int i = 0; i < num_routers; i++) {
-        destroyRouter(&routers[i]);
+        destroyRouter(&routers->routers[i]);
     }
 
     return EXIT_SUCCESS;

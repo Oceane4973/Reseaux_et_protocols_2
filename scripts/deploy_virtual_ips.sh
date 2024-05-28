@@ -16,7 +16,7 @@ deploy_device() {
     DEVICE="${ROUTER}_${INTERFACE}"
 
     if ip addr show "$DEVICE" &> /dev/null; then
-        elete_device $DEVICE
+        delete_device $DEVICE
     fi
 
     ip link add $DEVICE type dummy

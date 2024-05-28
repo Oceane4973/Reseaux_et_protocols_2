@@ -3,7 +3,6 @@
 void broadcast_send_message(char* message, char* ip, int port){
     int udpSocket;
     struct sockaddr_in udpAddr;
-    char buffer[BUFFER_SIZE];
     int broadcastPermission = 1;
 
     // Création du socket UDP

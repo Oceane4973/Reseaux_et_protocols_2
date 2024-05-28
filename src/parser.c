@@ -4,7 +4,7 @@
 #include <yaml.h>
 #include "parser.h"
 
-Router* parse_yaml_file_to_router(FILE *file) {
+Routers* parse_yaml_file_to_router(FILE *file) {
     // Initialisation de l'analyseur YAML
     yaml_parser_t parser;
     yaml_token_t token;
@@ -62,10 +62,9 @@ Router* parse_yaml_file_to_router(FILE *file) {
                     routers[current_router_index].num_devices = 0;
                     routers[current_router_index].name = NULL;
                     num_routers++;
-                } 
+                }
 
                 if (current_key && strcmp(current_key, "name") == 0 && current_device_index == -1) {
-                    // Nom du routeur
                     routers[current_router_index].name = strdup((char *)token.data.scalar.value);
                 } else if (current_key && strcmp(current_key, "port") == 0 && current_device_index == -1) {
                     routers[current_router_index].port = atoi((char*)token.data.scalar.value);
@@ -115,6 +114,8 @@ Router* parse_yaml_file_to_router(FILE *file) {
                 } else if (current_router_index != -1) {
                     // Fin du mappage pour le routeur
                     current_router_index = -1;
+                    // Réinitialiser l'index du dispositif après avoir ajouté tous les dispositifs au routeur
+                    current_device_index = -1;
                 }
                 yaml_token_delete(&token);
                 break;
@@ -129,6 +130,9 @@ Router* parse_yaml_file_to_router(FILE *file) {
     yaml_parser_delete(&parser);
     fclose(file);
 
-    return routers;
-    free(routers);
+    Routers *routers_tab = (Routers *)malloc(sizeof(Routers));
+    routers_tab->num_routers = num_routers;
+    routers_tab->routers = routers;
+
+    return routers_tab;
 }
