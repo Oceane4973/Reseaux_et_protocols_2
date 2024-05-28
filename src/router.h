@@ -23,7 +23,7 @@ typedef struct {
 
 typedef struct {
     Device *device;
-    char *routerName;
+    Router* router;
     int port;
 } ThreadDevicesArg;
 

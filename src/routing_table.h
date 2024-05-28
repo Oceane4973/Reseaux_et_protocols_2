@@ -18,6 +18,7 @@ typedef struct {
 Routing_table* initRoutingTable(const char *routing_table_path);
 void destroyRoutingTable(Routing_table* routing_table);
 void destroyRoute(Route* route);
+void displayRoutingTable(Routing_table *routing_table);
 
 #endif
 

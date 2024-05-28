@@ -66,6 +66,9 @@ Routers* parse_yaml_file_to_router(FILE *file) {
 
                 if (current_key && strcmp(current_key, "name") == 0 && current_device_index == -1) {
                     routers[current_router_index].name = strdup((char *)token.data.scalar.value);
+                    char routing_table_path[MAX_PATH_LENGTH];
+                    sprintf(routing_table_path, "%s%s/routing_table.yaml", GLOBAL_ROUTING_TABLE_PATH, routers[current_router_index].name);
+                    routers[current_router_index].routing_table = initRoutingTable(routing_table_path);
                 } else if (current_key && strcmp(current_key, "port") == 0 && current_device_index == -1) {
                     routers[current_router_index].port = atoi((char*)token.data.scalar.value);
                 } else if (current_key && (strcmp(current_key, "interface") == 0 || strcmp(current_key, "ip") == 0 || strcmp(current_key, "mask") == 0)) {

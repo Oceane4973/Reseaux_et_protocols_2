@@ -7,13 +7,13 @@
 void test_calculate_broadcast_address();
 void test_yaml_file_parser_to_router();
 void test_device_and_router_constructors();
-void test_yaml_file_parser_to_touting_table();
+void test_yaml_file_parser_to_routing_table();
 
 int main() {
     test_device_and_router_constructors();
     test_calculate_broadcast_address();
     test_yaml_file_parser_to_router();
-    test_yaml_file_parser_to_touting_table();
+    test_yaml_file_parser_to_routing_table();
     
     return 0;
 }
@@ -47,14 +47,14 @@ void test_device_and_router_constructors() {
     assert(device.ip == NULL);
 
     printf("Test Passed: destroyDevice().\n");
-    
+
     // Router
     Device devices[] = {
         initDevice("eth0", "127.0.0.1", 24),
         initDevice("eth1", "192.1.1.2", 24)
     };
     Router my_router = initRouter("R1", 8000, devices, 2);
-    
+
     assert(strcmp(my_router.name, "R1") == 0);
     assert(my_router.port == 8000);
     assert(my_router.num_devices == 2);
@@ -125,7 +125,7 @@ void test_yaml_file_parser_to_router(){
     }
 }
 
-void test_yaml_file_parser_to_touting_table(){
+void test_yaml_file_parser_to_routing_table(){
     const char *yaml_content = 
     "routes:\n"
     "  - destination: 127.0.0.0\n"
@@ -160,6 +160,6 @@ void test_yaml_file_parser_to_touting_table(){
     assert(tables[1].distance == 1);
 
     printf("Test Passed: parse_yaml_file_to_routing_table().\n");
-    
+
     destroyRoutingTable(routing_table);
 }

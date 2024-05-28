@@ -14,7 +14,13 @@ Router initRouter(const char *name, int port, Device *devices, int num_devices) 
     Router router;
     router.name = strdup(name); // Allouer et copier le nom du routeur
     router.port = port;
-    router.devices = malloc(num_devices * sizeof(Device)); // Allouer de la mémoire pour les dispositifs
+
+    // Allouer de la mémoire pour les dispositifs et copier les données
+    router.devices = malloc(num_devices * sizeof(Device));
+    if (!router.devices) {
+        perror("Failed to allocate memory for router devices");
+        exit(EXIT_FAILURE);
+    }
     for (int i = 0; i < num_devices; ++i) {
         router.devices[i].interface = strdup(devices[i].interface); // Allouer et copier l'interface
         router.devices[i].ip = strdup(devices[i].ip); // Allouer et copier l'adresse IP
@@ -48,7 +54,7 @@ void *deviceThread(void *threadDevicesArg) {
 
     // Accès au périphérique et au port à partir de la structure
     Device *device = thread_arg->device;
-    int devicePort = thread_arg->port;
+    int devicePort = thread_arg->router->port;
 
     int tcpSocket, udpSocket;
     struct sockaddr_in tcpAddr, udpAddr;
@@ -119,7 +125,7 @@ void *deviceThread(void *threadDevicesArg) {
         exit(EXIT_FAILURE);
     }
 
-    printf("%s_%s    Listening on %s:%d and %s:%i for broadcast \n", thread_arg->routerName, device->interface, device->ip, devicePort, broadcast_adrr, BROADCAST_PORT);
+    printf("%s_%s    Listening on %s:%d and %s:%i for broadcast \n", thread_arg->router->name, device->interface, device->ip, devicePort, broadcast_adrr, BROADCAST_PORT);
 
     // Boucle principale pour la réception des messages
     while (1) {
@@ -152,7 +158,7 @@ void *deviceThread(void *threadDevicesArg) {
                 exit(EXIT_FAILURE);
             }
 
-            printf("%s_%s    Connection accepted from %s:%d\n", thread_arg->routerName, device->interface, inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+            printf("%s_%s    Connection accepted from %s:%d\n", thread_arg->router->name, device->interface, inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
 
             // Réception des données du client
             bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
@@ -167,7 +173,7 @@ void *deviceThread(void *threadDevicesArg) {
             //if (strcmp(buffer, "broadcast") == 0) {
             const char *message = "hello world";
             send(clientSocket, message, strlen(message), 0);
-            printf("%s_%s    Sent: %s\n", thread_arg->routerName,device->interface, message);
+            printf("%s_%s    Sent: %s\n", thread_arg->router->name,device->interface, message);
             //}
 
             // Fermeture de la connexion avec le client
@@ -185,15 +191,13 @@ void *deviceThread(void *threadDevicesArg) {
                 continue;
             }
             buffer[bytesReceived] = '\0';
-            printf("%s_%s    Broadcast on %s:%i received \"%s\" \n", thread_arg->routerName, device->interface, broadcast_adrr, BROADCAST_PORT, buffer);
+            printf("%s_%s    Broadcast on %s:%i received \"%s\" \n", thread_arg->router->name, device->interface, broadcast_adrr, BROADCAST_PORT, buffer);
+            displayRoutingTable(thread_arg->router->routing_table);
         }
     }
 
-    free(device->interface);
-    free(device->ip);
-    free(device);
-    free(thread_arg->device);
-    free(thread_arg->routerName);
+    destroyDevice(thread_arg->device);
+    destroyRouter(thread_arg->router);
     free(thread_arg);
 
     close(tcpSocket);
@@ -220,8 +224,7 @@ void *startRouter(void *threadRouterArg) {
         memcpy(thread_arg->device, &router.devices[i], sizeof(Device));
 
         // Assignation du port
-        thread_arg->port = router.port;
-        thread_arg->routerName = router.name;
+        thread_arg->router = &router;
 
         // Création du thread avec la structure comme argument
         if (pthread_create(&threads[i], NULL, deviceThread, thread_arg) != 0) {
