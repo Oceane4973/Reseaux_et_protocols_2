@@ -8,12 +8,14 @@ void test_calculate_broadcast_address();
 void test_yaml_file_parser_to_router();
 void test_device_and_router_constructors();
 void test_yaml_file_parser_to_routing_table();
+void test_updateRoutingTable();
 
 int main() {
     test_device_and_router_constructors();
     test_calculate_broadcast_address();
     test_yaml_file_parser_to_router();
     test_yaml_file_parser_to_routing_table();
+    test_updateRoutingTable();
     
     return 0;
 }
@@ -162,4 +164,61 @@ void test_yaml_file_parser_to_routing_table(){
     printf("Test Passed: parse_yaml_file_to_routing_table().\n");
 
     destroyRoutingTable(routing_table);
+}
+
+void test_updateRoutingTable(){
+    //création d'un routeur
+    Device devices[] = {
+        initDevice("eth0", "127.0.0.1", 24),
+        initDevice("eth1", "192.1.1.2", 24)
+    };
+    Router my_router = initRouter("R1", 8000, devices, 2);
+
+    //creation d'une table de routage
+    const char *yaml_content = 
+    "routes:\n"
+    "  - destination: 127.0.0.0\n"
+    "    mask: 24\n"
+    "    passerelle:\n"
+    "    interface: 127.0.0.1\n"
+    "    distance: 1\n"
+    "  - destination: 10.1.2.0\n"
+    "    mask: 30\n"
+    "    passerelle: 10.1.1.1\n"
+    "    interface: 10.1.1.2\n"
+    "    distance: 3\n"
+    "  - destination: 10.1.2.0\n"
+    "    mask: 30\n"
+    "    passerelle: 10.1.1.3\n"
+    "    interface: 10.1.1.2\n"
+    "    distance: 2\n";
+
+    FILE *file = fmemopen((void *)yaml_content, strlen(yaml_content), "r");
+    Routing_table* routing_table = parse_yaml_file_to_routing_table(file);
+
+
+    assert(my_router.routing_table->num_route == 2);
+    assert(routing_table->num_route == 3);
+
+    updateRoutingTable(&my_router, routing_table);
+
+    //char *routing_table_str = displayRoutingTable(my_router.routing_table);
+    //printf("%s", routing_table_str);
+
+    assert(my_router.routing_table->num_route == 3);
+
+    assert(strcmp(my_router.routing_table->table[0].destination, "127.0.0.0") == 0);
+    assert(strcmp(my_router.routing_table->table[0].passerelle, "") == 0);
+    assert(strcmp(my_router.routing_table->table[0].interface, "127.0.0.1") == 0);
+
+    assert(strcmp(my_router.routing_table->table[2].destination, "10.1.2.0") == 0);
+    assert(strcmp(my_router.routing_table->table[2].passerelle, "10.1.1.3") == 0);
+    assert(strcmp(my_router.routing_table->table[2].interface, "10.1.1.2") == 0);
+    assert(my_router.routing_table->table[2].distance == 2);
+    
+    printf("Test Passed: update_routing_table().\n");
+
+    //free(routing_table_str);
+    destroyRoutingTable(routing_table);
+    destroyRouter(&my_router);
 }

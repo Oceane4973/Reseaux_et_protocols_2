@@ -4,6 +4,7 @@
         "typeinfo": "c",
         "stdlib.h": "c",
         "cstdlib": "c",
-        "socket.h": "c"
+        "socket.h": "c",
+        "routing_table.h": "c"
     }
 }

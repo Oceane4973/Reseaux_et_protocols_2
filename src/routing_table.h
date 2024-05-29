@@ -1,6 +1,8 @@
 #ifndef ROUTING_TABLE_H
 #define ROUTING_TABLE_H
 
+#include <stdio.h>
+
 typedef struct {
     char *destination;
     int mask;

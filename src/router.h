@@ -41,6 +41,7 @@ Router initRouter(const char *name, int port, Device *devices, int num_devices);
 void destroyRouter(Router *router);
 void *deviceThread(void *ThreadDevicesArg);
 void *startRouter(void *ThreadRouterArg);
+void updateRoutingTable(Router *router, Routing_table *routing_table);
 
 char* calculate_broadcast_address(const char* ip_address, const int cidr);
 

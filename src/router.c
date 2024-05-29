@@ -9,7 +9,6 @@
 #include <sys/select.h>
 #include "router.h"
 #include "parser.h"
-#include "routing_table.h"
 
 Router initRouter(const char *name, int port, Device *devices, int num_devices) {
     Router router;
@@ -290,4 +289,48 @@ char* calculate_broadcast_address(const char* ip_address, const int cidr) {
             broadcast & 0xFF);
 
     return broadcast_address;
+}
+
+void updateRoutingTable(Router *router, Routing_table *routing_table) {
+    if (!router || !router->routing_table || !routing_table) {
+        return;
+    }
+
+    for (int i = 0; i < routing_table->num_route; i++) {
+        Route *new_route = &routing_table->table[i];
+        int found = 0;
+
+        // Check if the destination is already in the router's routing table
+        for (int j = 0; j < router->routing_table->num_route; j++) {
+            Route *existing_route = &router->routing_table->table[j];
+
+            if (strcmp(existing_route->destination, new_route->destination) == 0 && existing_route->mask == new_route->mask) {
+                found = 1;
+                // Compare distances and update if the new distance is shorter
+                if (new_route->distance < existing_route->distance) {
+                    existing_route->distance = new_route->distance;
+                    if (existing_route->passerelle) free(existing_route->passerelle);
+                    if (existing_route->interface) free(existing_route->interface);
+                    existing_route->passerelle = strdup(new_route->passerelle);
+                    existing_route->interface = strdup(new_route->interface);
+                }
+                break;
+            }
+        }
+
+        // If the destination is not found, add the new route
+        if (!found) {
+            router->routing_table->table = realloc(router->routing_table->table, (router->routing_table->num_route + 1) * sizeof(Route));
+            if (!router->routing_table->table) {
+                perror("Failed to reallocate memory for routing table");
+                exit(EXIT_FAILURE);
+            }
+            router->routing_table->table[router->routing_table->num_route].destination = strdup(new_route->destination);
+            router->routing_table->table[router->routing_table->num_route].mask = new_route->mask;
+            router->routing_table->table[router->routing_table->num_route].passerelle = strdup(new_route->passerelle);
+            router->routing_table->table[router->routing_table->num_route].interface = strdup(new_route->interface);
+            router->routing_table->table[router->routing_table->num_route].distance = new_route->distance;
+            router->routing_table->num_route++;
+        }
+    }
 }
