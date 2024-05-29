@@ -52,23 +52,47 @@ void destroyRoute(Route* route) {
     free(route->interface);
 }
 
-void displayRoutingTable(Routing_table *routing_table) {
+char* displayRoutingTable(Routing_table *routing_table) {
     if (!routing_table) {
-        printf("Routing table is NULL.\n");
-        return;
+        return strdup("Routing table is NULL.\n");
     }
 
-    printf("Routing Table Path: %s\n", routing_table->routing_table_path ? routing_table->routing_table_path : "No path specified");
-    printf("Number of Routes: %d\n", routing_table->num_route);
-    printf("Routes:\n");
+    size_t buffer_size = 1024;
+    char *result = (char *)malloc(buffer_size);
+    if (!result) {
+        perror("Failed to allocate memory");
+        exit(EXIT_FAILURE);
+    }
+    result[0] = '\0';
 
     for (int i = 0; i < routing_table->num_route; i++) {
         Route *route = &routing_table->table[i];
-        printf("  Route %d:\n", i + 1);
-        printf("    Destination: %s\n", route->destination ? route->destination : "N/A");
-        printf("    Mask: %d\n", route->mask);
-        printf("    Passerelle: %s\n", route->passerelle ? route->passerelle : "N/A");
-        printf("    Interface: %s\n", route->interface ? route->interface : "N/A");
-        printf("    Distance: %d\n", route->distance);
+        
+        char route_info[256];
+        snprintf(route_info, sizeof(route_info),
+                 //" { Route : %d, "
+                 " { Destination : %s, "
+                 " Mask : %d, "
+                 " Passerelle : %s, "
+                 " Interface : %s, "
+                 " Distance : %d },\n", 
+                 //i + 1, 
+                 route->destination ? route->destination : "N/A", 
+                 route->mask, 
+                 route->passerelle ? route->passerelle : "N/A",
+                 route->interface ? route->interface : "N/A",
+                 route->distance);
+
+        if (strlen(result) + strlen(route_info) + 1 > buffer_size) {
+            buffer_size *= 2;
+            result = (char *)realloc(result, buffer_size);
+            if (!result) {
+                perror("Failed to reallocate memory");
+                exit(EXIT_FAILURE);
+            }
+        }
+        strcat(result, route_info);
     }
+
+    return result;
 }

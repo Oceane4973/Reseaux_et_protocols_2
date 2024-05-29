@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <sys/select.h>
 #include "router.h"
+#include "parser.h"
 #include "routing_table.h"
 
 Router initRouter(const char *name, int port, Device *devices, int num_devices) {
@@ -192,7 +193,11 @@ void *deviceThread(void *threadDevicesArg) {
                 continue;
             }
             buffer[bytesReceived] = '\0';
-            printf("%s_%s    Broadcast on %s:%i received \n\"%s\" \n", thread_arg->router->name, device->interface, broadcast_adrr, BROADCAST_PORT, buffer);
+            FILE *file = fmemopen((void *)buffer, strlen(buffer), "r");
+            Routing_table* routing_table = parse_yaml_file_to_routing_table(file);
+            char *routing_table_str = displayRoutingTable(routing_table);
+            printf("%s_%s    Broadcast on %s:%i received :  \n%s", thread_arg->router->name, device->interface, broadcast_adrr, BROADCAST_PORT, routing_table_str);
+            free(routing_table_str);
         }
     }
 
