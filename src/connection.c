@@ -75,7 +75,7 @@ void send_yaml_file(const char *filename, int socket) {
         }
     }
 
-    printf("Client sent: %s\n", buffer);
+    printf("Client sent buffer : \n%s\n", buffer);
 
     fclose(file);
 }

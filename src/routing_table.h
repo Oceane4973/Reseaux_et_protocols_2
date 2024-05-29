@@ -21,5 +21,6 @@ Routing_table* initRoutingTable(const char *routing_table_path);
 void destroyRoutingTable(Routing_table* routing_table);
 void destroyRoute(Route* route);
 char* displayRoutingTable(Routing_table *routing_table);
+char* routing_table_to_buffer(Routing_table *routing_table);
 
 #endif

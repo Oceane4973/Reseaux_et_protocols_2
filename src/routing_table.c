@@ -96,3 +96,39 @@ char* displayRoutingTable(Routing_table *routing_table) {
 
     return result;
 }
+
+char* routing_table_to_buffer(Routing_table *routing_table) {
+    if (!routing_table) {
+        fprintf(stderr, "Routing table is NULL\n");
+        return NULL;
+    }
+
+    // Allouer de la mémoire pour le buffer
+    char *buffer = (char*)malloc(MAX_BUFFER_SIZE);
+    if (!buffer) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Initialiser le buffer avec le préfixe YAML
+    snprintf(buffer, MAX_BUFFER_SIZE, "routes:\n");
+
+    // Parcourir la table de routage et ajouter chaque route au buffer
+    for (int i = 0; i < routing_table->num_route; i++) {
+        Route *route = &routing_table->table[i];
+        char temp[MAX_CONFIG_LINE_LENGTH]; // Tampon temporaire pour la route actuelle
+
+        // Formatage de la route dans une chaîne temporaire
+        snprintf(temp, MAX_CONFIG_LINE_LENGTH, "  - destination: %s\n    mask: %d\n    passerelle: %s\n    interface: %s\n    distance: %d\n",
+                 route->destination ? route->destination : "",
+                 route->mask,
+                 route->passerelle ? route->passerelle : "",
+                 route->interface ? route->interface : "",
+                 route->distance);
+
+        // Concaténer la chaîne temporaire au buffer
+        strncat(buffer, temp, MAX_BUFFER_SIZE - strlen(buffer) - 1);
+    }
+
+    return buffer;
+}

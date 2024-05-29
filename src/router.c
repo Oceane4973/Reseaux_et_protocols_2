@@ -188,14 +188,45 @@ void *deviceThread(void *threadDevicesArg) {
             
             int bytesReceived = recvfrom(udpSocket, buffer, BUFFER_SIZE - 1, 0, (struct sockaddr *)&udpAddr, &addrLen);
             if (bytesReceived < 0) {
-                perror("Receive failed");
-                continue;
+                close(tcpSocket);
+                close(udpSocket);
+                exit(EXIT_FAILURE);
             }
-            buffer[bytesReceived] = '\0';
-            FILE *file = fmemopen((void *)buffer, strlen(buffer), "r");
-            Routing_table* routing_table = parse_yaml_file_to_routing_table(file);
-            char *routing_table_str = displayRoutingTable(routing_table);
+            buffer[bytesReceived] = '\0'; // Ajout du caractère de fin de chaîne au buffer
+            FILE *file = fmemopen((void *)buffer, bytesReceived, "r"); // Utilisation de bytesReceived pour la taille du buffer
+            if (!file) {
+                perror("Failed to open memory as file");
+                close(tcpSocket);
+                close(udpSocket);
+                exit(EXIT_FAILURE);
+            }
+
+            // Parser le fichier YAML en table de routage
+            Routing_table *routing_table = parse_yaml_file_to_routing_table(file);
+            fclose(file); // Fermeture du fichier après utilisation
+
+            if (routing_table == NULL) {
+                fprintf(stderr, "Failed to parse YAML routing table\n");
+                close(tcpSocket);
+                close(udpSocket);
+                exit(EXIT_FAILURE);
+            }
+
+            // Afficher la table de routage reçue
+            /**char *routing_table_str = displayRoutingTable(routing_table);
             printf("%s_%s    Broadcast on %s:%i received :  \n%s", thread_arg->router->name, device->interface, broadcast_adrr, BROADCAST_PORT, routing_table_str);
+            free(routing_table_str);**/
+
+            // Mettre à jour la table de routage du routeur
+            updateRoutingTable(thread_arg->router, routing_table);
+
+            // Libérer la mémoire allouée pour la table de routage
+            destroyRoutingTable(routing_table);
+
+            // Réafficher la table de routage mise à jour
+            char *routing_table_str = displayRoutingTable(thread_arg->router->routing_table);
+            printf( "%s_%s    Broadcast on %s:%i received a routing table\n"
+                    "%s         Updated routing table :  \n%s", thread_arg->router->name, device->interface, broadcast_adrr, BROADCAST_PORT, thread_arg->router->name, routing_table_str);
             free(routing_table_str);
         }
     }
@@ -298,6 +329,7 @@ void updateRoutingTable(Router *router, Routing_table *routing_table) {
 
     for (int i = 0; i < routing_table->num_route; i++) {
         Route *new_route = &routing_table->table[i];
+        new_route->distance++;
         int found = 0;
 
         // Check if the destination is already in the router's routing table

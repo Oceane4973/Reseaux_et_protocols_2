@@ -214,7 +214,7 @@ void test_updateRoutingTable(){
     assert(strcmp(my_router.routing_table->table[2].destination, "10.1.2.0") == 0);
     assert(strcmp(my_router.routing_table->table[2].passerelle, "10.1.1.3") == 0);
     assert(strcmp(my_router.routing_table->table[2].interface, "10.1.1.2") == 0);
-    assert(my_router.routing_table->table[2].distance == 2);
+    assert(my_router.routing_table->table[2].distance == (2+1));
     
     printf("Test Passed: update_routing_table().\n");
 
