@@ -53,4 +53,16 @@ routers:
       - interface: eth3
         ip: 10.1.6.1
         mask: 30
+      - interface: eth4
+        ip: 10.1.7.2
+        mask: 30
+  - name: R6
+    port: 8520
+    devices:
+      - interface: eth0
+        ip: 10.1.7.1
+        mask: 30
+      - interface: eth1
+        ip: 172.16.180.1
+        mask: 24
   

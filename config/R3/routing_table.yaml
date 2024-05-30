@@ -1,0 +1,12 @@
+routes:
+  - destination: 10.1.2.0
+    mask: 30
+    passerelle : 
+    interface: 10.1.2.2
+    distance : 1
+  - destination: 10.1.5.0
+    mask: 30
+    passerelle : 
+    interface: 10.1.5.2
+    distance : 1
+    
