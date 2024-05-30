@@ -126,7 +126,7 @@ void *deviceThread(void *threadDevicesArg) {
     }
 
     printf("%s_%s    Listening on %s:%d and %s:%i for broadcast \n", thread_arg->router->name, device->interface, device->ip, devicePort, broadcast_adrr, BROADCAST_PORT);
-
+    int nb=1;
     // Boucle principale pour la réception des messages
     while (1) {
         FD_ZERO(&readfds);
@@ -185,6 +185,8 @@ void *deviceThread(void *threadDevicesArg) {
         ------------------------------ */
 
         if (FD_ISSET(udpSocket, &readfds)) {
+
+            //GESTION RECEPTION
             
             int bytesReceived = recvfrom(udpSocket, buffer, BUFFER_SIZE - 1, 0, (struct sockaddr *)&udpAddr, &addrLen);
             if (bytesReceived < 0) {
@@ -203,6 +205,10 @@ void *deviceThread(void *threadDevicesArg) {
 
             // Parser le fichier YAML en table de routage
             Routing_table *routing_table = parse_yaml_file_to_routing_table(file);
+            
+            //C'est celui qui envoie qui remplit ses passerelles ! 
+            //fill_empty_gateways(routing_table, thread_arg->device->ip);
+
             fclose(file); // Fermeture du fichier après utilisation
 
             if (routing_table == NULL) {
@@ -228,6 +234,21 @@ void *deviceThread(void *threadDevicesArg) {
             printf( "%s_%s    Broadcast on %s:%i received a routing table\n"
                     "%s         Updated routing table :  \n%s", thread_arg->router->name, device->interface, broadcast_adrr, BROADCAST_PORT, thread_arg->router->name, routing_table_str);
             free(routing_table_str);
+        }
+
+        //GESTION ENVOIE
+        if (nb>0){
+            Routing_table *routing_table_send = copy_routing_table(thread_arg->router->routing_table);
+            fill_empty_gateways(routing_table_send, thread_arg->device->ip);
+            char *routing_table_send_str = displayRoutingTable(routing_table_send);
+            if (sendto(udpSocket, routing_table_send_str, strlen(routing_table_send_str), 0, (struct sockaddr *)&udpAddr, sizeof(udpAddr)) < 0) {
+                perror("Send failed");
+            } else {
+                printf("%s_%s    Broadcast on %s:%i send :  \n%s", thread_arg->router->name, device->interface, broadcast_adrr, BROADCAST_PORT, routing_table_send_str);
+            }
+            nb--;
+            free(routing_table_send_str);
+            free(routing_table_send);
         }
     }
 
@@ -363,6 +384,24 @@ void updateRoutingTable(Router *router, Routing_table *routing_table) {
             router->routing_table->table[router->routing_table->num_route].interface = strdup(new_route->interface);
             router->routing_table->table[router->routing_table->num_route].distance = new_route->distance;
             router->routing_table->num_route++;
+        }
+    }
+}
+
+void fill_empty_gateways(Routing_table *routing_table, const char *default_gateway) {
+    if (!routing_table || !default_gateway) {
+        return;
+    }
+
+    for (int i = 0; i < routing_table->num_route; i++) {
+        Route *route = &routing_table->table[i];
+        if (!route->passerelle || strcmp(route->passerelle, "") == 0) {
+            free(route->passerelle); // Libérer la mémoire de la passerelle actuelle si nécessaire
+            route->passerelle = strdup(default_gateway); // Copier la nouvelle passerelle
+            if (!route->passerelle) {
+                perror("Failed to allocate memory for gateway");
+                exit(EXIT_FAILURE);
+            }
         }
     }
 }

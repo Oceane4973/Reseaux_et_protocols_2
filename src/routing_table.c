@@ -132,3 +132,47 @@ char* routing_table_to_buffer(Routing_table *routing_table) {
 
     return buffer;
 }
+
+Routing_table* copy_routing_table(const Routing_table *src) {
+    Routing_table *dst = (Routing_table *)malloc(sizeof(Routing_table));
+    if (!dst) {
+        perror("Failed to allocate memory for Routing_table");
+        exit(EXIT_FAILURE);
+    }
+    dst->num_route = src->num_route;
+    dst->routing_table_path = safe_strdup(src->routing_table_path);
+
+    dst->table = (Route *)malloc(dst->num_route * sizeof(Route));
+    if (!dst->table) {
+        perror("Failed to allocate memory for routes");
+        free(dst->routing_table_path);
+        free(dst);
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < dst->num_route; ++i) {
+        dst->table[i] = copy_route(&src->table[i]);
+    }
+
+    return dst;
+}
+
+Route copy_route(const Route *src) {
+    Route dst;
+    dst.destination = safe_strdup(src->destination);
+    dst.mask = src->mask;
+    dst.passerelle = safe_strdup(src->passerelle);
+    dst.interface = safe_strdup(src->interface);
+    dst.distance = src->distance;
+    return dst;
+}
+
+char* safe_strdup(const char *src) {
+    if (!src) return NULL;
+    char *dst = strdup(src);
+    if (!dst) {
+        perror("Failed to allocate memory");
+        exit(EXIT_FAILURE);
+    }
+    return dst;
+}
