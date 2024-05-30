@@ -37,7 +37,7 @@ void broadcast_send_message(char* message, char* ip, int port){
         close(socket.socket_id);
         exit(EXIT_FAILURE);
     }
-    printf("Client sent: %s\n", message);
+    //printf("Client sent: %s\n", message);
 
     close(socket.socket_id);
 }

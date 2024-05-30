@@ -36,10 +36,16 @@ typedef struct {
     int num_routers;
 } Routers;
 
+typedef struct {
+    char* broadcast_adrr; 
+    int port;
+    Device* device;
+    Router * router;
+} ThreadBroadcastArg;
+
 // Déclaration des fonctions
 Router initRouter(const char *name, int port, Device *devices, int num_devices);
 void destroyRouter(Router *router);
-void *deviceThread(void *ThreadDevicesArg);
 void *startRouter(void *ThreadRouterArg);
 void updateRoutingTable(Router *router, Routing_table *routing_table);
 

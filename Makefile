@@ -14,7 +14,7 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Règle pour construire le programme main
-main: $(BUILDDIR)/main.o $(BUILDDIR)/router.o $(BUILDDIR)/device.o $(BUILDDIR)/parser.o $(BUILDDIR)/routing_table.o
+main: $(BUILDDIR)/main.o $(BUILDDIR)/router.o $(BUILDDIR)/device.o $(BUILDDIR)/parser.o $(BUILDDIR)/routing_table.o $(BUILDDIR)/connection.o
 	$(CC) $(CFLAGS) $^ -o main -lyaml
 
 # Règle pour construire le programme client

@@ -5,6 +5,8 @@
         "stdlib.h": "c",
         "cstdlib": "c",
         "socket.h": "c",
-        "routing_table.h": "c"
+        "routing_table.h": "c",
+        "router.h": "c",
+        "device.h": "c"
     }
 }
