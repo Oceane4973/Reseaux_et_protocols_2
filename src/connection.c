@@ -24,7 +24,26 @@ Connection broadcast_connection(char* ip, int port){
     
     Connection co;
     co.socket_id = udpSocket;
-    co.udpAddr = udpAddr;
+    co.addr = udpAddr;
+    return co;
+}
+
+Connection standard_connection(char* ip, int port){
+    int tcpSocket;
+    struct sockaddr_in tcpAddr;
+
+    if ((tcpSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        perror("Socket creation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    tcpAddr.sin_family = AF_INET;
+    tcpAddr.sin_addr.s_addr = inet_addr(ip);
+    tcpAddr.sin_port = htons(port);
+    
+    Connection co;
+    co.socket_id = tcpSocket;
+    co.addr = tcpAddr;
     return co;
 }
 
@@ -32,8 +51,8 @@ void broadcast_send_message(char* message, char* ip, int port){
     Connection socket = broadcast_connection(ip, port);
     
     // Envoi du message de diffusion au serveur
-    if (sendto(socket.socket_id, message, strlen(message), 0, (struct sockaddr *)&socket.udpAddr, sizeof(socket.udpAddr)) < 0) {
-        perror("Send failed");
+    if (sendto(socket.socket_id, message, strlen(message), 0, (struct sockaddr *)&socket.addr, sizeof(socket.addr)) < 0) {
+        perror("Send failed : broadcast_send_message() ");
         close(socket.socket_id);
         exit(EXIT_FAILURE);
     }
@@ -46,7 +65,7 @@ void broadcast_send_file(char* filename, char* ip, int port){
     Connection socket = broadcast_connection(ip, port);
 
     // Connect to server
-    if (connect(socket.socket_id, (struct sockaddr *)&socket.udpAddr, sizeof(socket.udpAddr)) == -1) {
+    if (connect(socket.socket_id, (struct sockaddr *)&socket.addr, sizeof(socket.addr)) == -1) {
         perror("Failed to connect to server");
         exit(EXIT_FAILURE);
     }

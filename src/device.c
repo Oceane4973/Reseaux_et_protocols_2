@@ -61,43 +61,28 @@ void *send_on_broadcast(void *threadBroadcastArg){
 
 void *deviceThread(void *threadDevicesArg) {
     ThreadDevicesArg *thread_arg = (ThreadDevicesArg *)threadDevicesArg;
+    char* broadcast_adrr = calculate_broadcast_address(thread_arg->device->ip, thread_arg->device->mask);
 
     // Accès au périphérique et au port à partir de la structure
-    Device *device = thread_arg->device;
-    int devicePort = thread_arg->router->port;
-
-    int tcpSocket, udpSocket;
-    struct sockaddr_in tcpAddr, udpAddr;
-    int broadcastEnable = 1;
     char buffer[MAX_BUFFER_SIZE];
     ssize_t bytesReceived;
     fd_set readfds;
     int max_fd;
-    socklen_t addrLen = sizeof(udpAddr);
-    char* broadcast_adrr = calculate_broadcast_address(device->ip, device->mask);
+
 
     /* ------------------------------
     Création du socket TCP
     ------------------------------ */
 
-    if ((tcpSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        perror("Socket creation failed");
+    Connection tcpSocketConnection = standard_connection(thread_arg->device->ip,thread_arg->router->port);
+    socklen_t tcp_addr_len = sizeof(tcpSocketConnection.addr);
+
+    if (bind(tcpSocketConnection.socket_id, (struct sockaddr *)&tcpSocketConnection.addr, tcp_addr_len) < 0) {
+        perror("tcpSocket bind failed");
         exit(EXIT_FAILURE);
     }
 
-    // Configuration de l'adresse du périphérique pour TCP
-    tcpAddr.sin_family = AF_INET;
-    tcpAddr.sin_addr.s_addr = inet_addr(device->ip);
-    tcpAddr.sin_port = htons(devicePort);
-
-    // Liaison du socket TCP à une adresse IP spécifiée et à un port donné
-    if (bind(tcpSocket, (struct sockaddr *)&tcpAddr, sizeof(tcpAddr)) < 0) {
-        perror("Bind failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // Écoute des connexions entrantes sur le socket TCP
-    if (listen(tcpSocket, 5) < 0) {
+    if (listen(tcpSocketConnection.socket_id, 5) < 0) {
         perror("Listen failed");
         exit(EXIT_FAILURE);
     }
@@ -105,37 +90,23 @@ void *deviceThread(void *threadDevicesArg) {
     /* ------------------------------
     Création du socket UDP pour les messages broadcast
     ------------------------------ */
-    
-    if ((udpSocket = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-        perror("Socket creation failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // Activation de l'option SO_BROADCAST pour le socket UDP
-    if (setsockopt(udpSocket, SOL_SOCKET, SO_BROADCAST, &broadcastEnable, sizeof(broadcastEnable)) == -1) {
-        perror("setsockopt for SO_BROADCAST failed");
-        exit(EXIT_FAILURE);
-    }
+    Connection udpSocketConnection = broadcast_connection(broadcast_adrr, BROADCAST_PORT);
+    socklen_t udp_addr_len = sizeof(udpSocketConnection.addr); // Obtenez la taille de la structure d'adresse
 
     // Activation de l'option SO_REUSEADDR pour le socket UDP
     int reuse = 1;
-    if (setsockopt(udpSocket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
+    if (setsockopt(udpSocketConnection.socket_id, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
         perror("setsockopt for SO_REUSEADDR failed");
         exit(EXIT_FAILURE);
     }
 
-    // Configuration de l'adresse pour le socket UDP
-    udpAddr.sin_family = AF_INET;
-    udpAddr.sin_addr.s_addr = inet_addr(broadcast_adrr);
-    udpAddr.sin_port = htons(BROADCAST_PORT);
-
     // Liaison du socket UDP pour écouter sur toutes les interfaces
-    if (bind(udpSocket, (struct sockaddr *)&udpAddr, sizeof(udpAddr)) < 0) {
+    if (bind(udpSocketConnection.socket_id, (struct sockaddr *)&udpSocketConnection.addr, udp_addr_len) < 0) {
         perror("Broadcast bind failed");
         exit(EXIT_FAILURE);
     }
 
-    printf("%s_%s    Listening on %s:%d and %s:%i for broadcast \n", thread_arg->router->name, device->interface, device->ip, devicePort, broadcast_adrr, BROADCAST_PORT);
+    printf("%s_%s    Listening on %s:%d and %s:%i for broadcast \n", thread_arg->router->name, thread_arg->device->interface, thread_arg->device->ip, thread_arg->router->port, broadcast_adrr, BROADCAST_PORT);
     
     /* ------------------------------
     Création du socket UDP pour les messages broadcast
@@ -151,16 +122,16 @@ void *deviceThread(void *threadDevicesArg) {
     // Boucle principale pour la réception des messages
     while (1) {
         FD_ZERO(&readfds);
-        FD_SET(tcpSocket, &readfds);
-        FD_SET(udpSocket, &readfds);
+        FD_SET(tcpSocketConnection.socket_id, &readfds);
+        FD_SET(udpSocketConnection.socket_id, &readfds);
 
-        max_fd = (tcpSocket > udpSocket) ? tcpSocket : udpSocket;
+        max_fd = (tcpSocketConnection.socket_id > udpSocketConnection.socket_id) ? tcpSocketConnection.socket_id : udpSocketConnection.socket_id;
 
         int activity = select(max_fd + 1, &readfds, NULL, NULL, NULL);
         if (activity < 0) {
             perror("select");
-            close(tcpSocket);
-            close(udpSocket);
+            close(tcpSocketConnection.socket_id);
+            close(udpSocketConnection.socket_id);
             exit(EXIT_FAILURE);
         }
 
@@ -168,18 +139,18 @@ void *deviceThread(void *threadDevicesArg) {
         Vérifier les connexions entrantes sur le socket TCP
         ------------------------------ */
 
-        if (FD_ISSET(tcpSocket, &readfds)) {
+        if (FD_ISSET(tcpSocketConnection.socket_id, &readfds)) {
             int clientSocket;
             struct sockaddr_in clientAddr;
             socklen_t clientAddrLen = sizeof(clientAddr);
 
             // Acceptation de la connexion entrante
-            if ((clientSocket = accept(tcpSocket, (struct sockaddr *)&clientAddr, &clientAddrLen)) < 0) {
+            if ((clientSocket = accept(tcpSocketConnection.socket_id, (struct sockaddr *)&clientAddr, &clientAddrLen)) < 0) {
                 perror("Accept failed");
                 exit(EXIT_FAILURE);
             }
 
-            printf("%s_%s    Connection accepted from %s:%d\n", thread_arg->router->name, device->interface, inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+            printf("%s_%s    Connection accepted from %s:%d\n", thread_arg->router->name, thread_arg->device->interface, inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
 
             // Réception des données du client
             bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
@@ -205,11 +176,11 @@ void *deviceThread(void *threadDevicesArg) {
         Vérifier les messages broadcast sur le socket UDP
         ------------------------------ */
 
-        if (FD_ISSET(udpSocket, &readfds)) {
+        if (FD_ISSET(udpSocketConnection.socket_id, &readfds)) {
 
             //GESTION RECEPTION
             
-            int bytesReceived = recvfrom(udpSocket, buffer, BUFFER_SIZE - 1, 0, (struct sockaddr *)&udpAddr, &addrLen);
+            int bytesReceived = recvfrom(udpSocketConnection.socket_id, buffer, BUFFER_SIZE - 1, 0, (struct sockaddr *)&udpSocketConnection.addr, &udp_addr_len);
             if (bytesReceived < 0) {
                 perror("bytesReceived is NULL");
                 //close(tcpSocket);
@@ -254,7 +225,7 @@ void *deviceThread(void *threadDevicesArg) {
             // Réafficher la table de routage mise à jour
             char *routing_table_str = displayRoutingTable(thread_arg->router->routing_table);
             printf( "%s_%s    Broadcast on %s:%i received a routing table\n"
-                    "%s         Updated routing table :  \n%s", thread_arg->router->name, device->interface, broadcast_adrr, BROADCAST_PORT, thread_arg->router->name, routing_table_str);
+                    "%s         Updated routing table :  \n%s", thread_arg->router->name, thread_arg->device->interface, broadcast_adrr, BROADCAST_PORT, thread_arg->router->name, routing_table_str);
             free(routing_table_str);
         }
     }
@@ -265,7 +236,7 @@ void *deviceThread(void *threadDevicesArg) {
     destroyRouter(thread_arg->router);
     free(thread_arg);
 
-    close(tcpSocket);
-    close(udpSocket);
+    close(tcpSocketConnection.socket_id);
+    close(udpSocketConnection.socket_id);
     pthread_exit(NULL);
 }
