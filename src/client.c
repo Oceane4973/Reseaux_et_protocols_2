@@ -8,7 +8,6 @@ int main() {
     return 0;
 }
 
-
 void hello_world(){
     char* message = "Hello, World!";
     char* ip = "10.1.6.2";

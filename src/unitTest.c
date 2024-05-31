@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h> // Ajout de l'inclusion de stdlib.h
-#include "main.h"
+#include "server.h"
 #include "router.h"
 #include "parser.h"
 
@@ -10,6 +10,7 @@ void test_yaml_file_parser_to_router();
 void test_device_and_router_constructors();
 void test_yaml_file_parser_to_routing_table();
 void test_updateRoutingTable();
+void test_yaml_file_parser_to_server();
 
 int main() {
     test_device_and_router_constructors();
@@ -17,6 +18,7 @@ int main() {
     test_yaml_file_parser_to_router();
     test_yaml_file_parser_to_routing_table();
     test_updateRoutingTable();
+    test_yaml_file_parser_to_server();
     
     return 0;
 }
@@ -222,4 +224,32 @@ void test_updateRoutingTable(){
     //free(routing_table_str);
     destroyRoutingTable(routing_table);
     destroyRouter(&my_router);
+}
+
+void test_yaml_file_parser_to_server() {
+    const char *yaml_content = 
+    "server:\n"
+    "  - name: S1\n"
+    "    port: 8080\n"
+    "    ip: 172.16.180.2\n"
+    "    mask: 24\n";
+
+    FILE *file = fmemopen((void *)yaml_content, strlen(yaml_content), "r");
+    if (!file) {
+        perror("fmemopen failed");
+        exit(EXIT_FAILURE);
+    }
+
+    Server *server = parse_yaml_file_to_server(file);
+
+    // Assertions to verify the parsed server data
+    assert(strcmp(server->name, "S1") == 0);
+    assert(server->port == 8080);
+    assert(strcmp(server->ip, "172.16.180.2") == 0);
+    assert(server->mask == 24);
+
+    printf("Test Passed: yaml_file_parser_to_server().\n");
+
+    // Clean up
+    destroyServer(server);
 }

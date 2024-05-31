@@ -1,0 +1,5 @@
+server:
+  - name: S1
+    port: 8080
+    ip: 172.16.180.2
+    mask: 24

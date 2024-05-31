@@ -9,7 +9,7 @@ L'objectif principal de ce projet est de créer une simulation réaliste d'un r�
 
 ## Structure du projet
 
-- `config.yaml` : Fichier de configuration YAML contenant les informations sur les routeurs, les appareils connectés et les adresses IP virtuelles à configurer.
+- `routers_config.yaml` : Fichier de configuration YAML contenant les informations sur les routeurs, les appareils connectés et les adresses IP virtuelles à configurer.
 - `scripts/deploy_virtual_ips.sh` : Script Bash pour configurer les adresses IP virtuelles.
 - `src/` : Code principal en C permettant le déploiement des routeurs.
 - `src/unitTest.c` : Script Bash pour exécuter des tests unitaires du code principal en C.

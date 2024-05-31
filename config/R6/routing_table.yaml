@@ -5,7 +5,7 @@ routes:
     interface: 10.1.7.1
     distance : 1
   - destination: 172.16.180.0
-    mask: 30
+    mask: 24
     passerelle : 
     interface: 172.16.180.1
     distance : 1

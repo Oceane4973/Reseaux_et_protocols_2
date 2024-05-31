@@ -85,12 +85,12 @@ void *deviceThread(void *threadDevicesArg) {
 
     if (bind(tcpSocketConnection.socket_id, (struct sockaddr *)&tcpSocketConnection.addr, tcp_addr_len) < 0) {
         perror("tcpSocket bind failed");
-        exit(EXIT_FAILURE);
+        pthread_exit(NULL);
     }
 
     if (listen(tcpSocketConnection.socket_id, 5) < 0) {
         perror("Listen failed");
-        exit(EXIT_FAILURE);
+        pthread_exit(NULL);
     }
 
     /* ------------------------------
@@ -103,13 +103,13 @@ void *deviceThread(void *threadDevicesArg) {
     int reuse = 1;
     if (setsockopt(udpSocketConnection.socket_id, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
         perror("setsockopt for SO_REUSEADDR failed");
-        exit(EXIT_FAILURE);
+        pthread_exit(NULL);
     }
 
     // Liaison du socket UDP pour écouter sur toutes les interfaces
     if (bind(udpSocketConnection.socket_id, (struct sockaddr *)&udpSocketConnection.addr, udp_addr_len) < 0) {
         perror("Broadcast bind failed");
-        exit(EXIT_FAILURE);
+        pthread_exit(NULL);
     }
 
     printf("%s_%s    Listening on %s:%d and %s:%i for broadcast \n", thread_arg->router->name, thread_arg->device->interface, thread_arg->device->ip, thread_arg->router->port, broadcast_adrr, BROADCAST_PORT);
@@ -138,7 +138,7 @@ void *deviceThread(void *threadDevicesArg) {
             perror("select");
             close(tcpSocketConnection.socket_id);
             close(udpSocketConnection.socket_id);
-            exit(EXIT_FAILURE);
+            pthread_exit(NULL);
         }
 
         /* ------------------------------
@@ -153,7 +153,7 @@ void *deviceThread(void *threadDevicesArg) {
             // Acceptation de la connexion entrante
             if ((clientSocket = accept(tcpSocketConnection.socket_id, (struct sockaddr *)&clientAddr, &clientAddrLen)) < 0) {
                 perror("Accept failed");
-                exit(EXIT_FAILURE);
+                pthread_exit(NULL);
             }
 
             //if (enable_logs){

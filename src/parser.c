@@ -327,3 +327,95 @@ Routing_table* parse_yaml_buffer_to_routing_table(const char *buffer, size_t siz
     yaml_parser_delete(&parser);
     return routing_table;
 }
+
+Server* parse_yaml_file_to_server(FILE *file) {
+    yaml_parser_t parser;
+    yaml_token_t token;
+
+    if (!yaml_parser_initialize(&parser)) {
+        perror("Failed to initialize YAML parser");
+        fclose(file);
+        exit(EXIT_FAILURE);
+    }
+
+    yaml_parser_set_input_file(&parser, file);
+
+    Server *server = (Server*)malloc(sizeof(Server));
+    if (!server) {
+        perror("Failed to allocate memory for server");
+        yaml_parser_delete(&parser);
+        fclose(file);
+        exit(EXIT_FAILURE);
+    }
+    server->name = NULL;
+    server->ip = NULL;
+    server->port = 0;
+    server->mask = 0;
+
+    char *current_key = NULL;
+
+    while (1) {
+        yaml_parser_scan(&parser, &token);
+        if (token.type == YAML_STREAM_END_TOKEN) {
+            yaml_token_delete(&token);
+            break;
+        }
+
+        switch (token.type) {
+            case YAML_KEY_TOKEN:
+                yaml_token_delete(&token);
+                yaml_parser_scan(&parser, &token);
+                current_key = strdup((char *)token.data.scalar.value);
+                yaml_token_delete(&token);
+                break;
+
+            case YAML_VALUE_TOKEN:
+                yaml_token_delete(&token);
+                yaml_parser_scan(&parser, &token);
+
+                if (current_key && strcmp(current_key, "name") == 0) {
+                    server->name = strdup((char *)token.data.scalar.value);
+                } else if (current_key && strcmp(current_key, "port") == 0) {
+                    server->port = atoi((char *)token.data.scalar.value);
+                } else if (current_key && strcmp(current_key, "ip") == 0) {
+                    server->ip = strdup((char *)token.data.scalar.value);
+                } else if (current_key && strcmp(current_key, "mask") == 0) {
+                    server->mask = atoi((char *)token.data.scalar.value);
+                }
+
+                free(current_key);
+                current_key = NULL;
+                yaml_token_delete(&token);
+                break;
+
+            case YAML_BLOCK_MAPPING_START_TOKEN:
+            case YAML_BLOCK_END_TOKEN:
+            case YAML_STREAM_START_TOKEN:
+            case YAML_STREAM_END_TOKEN:
+            case YAML_NO_TOKEN:
+            case YAML_VERSION_DIRECTIVE_TOKEN:
+            case YAML_TAG_DIRECTIVE_TOKEN:
+            case YAML_DOCUMENT_START_TOKEN:
+            case YAML_DOCUMENT_END_TOKEN:
+            case YAML_BLOCK_SEQUENCE_START_TOKEN:
+            case YAML_BLOCK_ENTRY_TOKEN:
+            case YAML_FLOW_SEQUENCE_START_TOKEN:
+            case YAML_FLOW_SEQUENCE_END_TOKEN:
+            case YAML_FLOW_MAPPING_START_TOKEN:
+            case YAML_FLOW_MAPPING_END_TOKEN:
+            case YAML_FLOW_ENTRY_TOKEN:
+            case YAML_ALIAS_TOKEN:
+            case YAML_ANCHOR_TOKEN:
+            case YAML_TAG_TOKEN:
+            case YAML_SCALAR_TOKEN:
+            default:
+                yaml_token_delete(&token);
+                break;
+        }
+    }
+
+    yaml_parser_delete(&parser);
+    fclose(file);
+
+    return server;
+}
