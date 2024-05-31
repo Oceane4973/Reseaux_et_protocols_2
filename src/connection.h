@@ -16,8 +16,8 @@ typedef struct {
 } Connection;
 
 void broadcast_send_message(char* message, char* ip, int port);
+void send_message_on_standard_socket(char* message, char* ip, int port);
 void send_yaml_file(const char *filename, int socket);
-void receive_and_print_yaml(int socket);
 void broadcast_send_file(char* filename, char* ip, int port);
 Connection standard_connection(char* ip, int port);
 Connection broadcast_connection(char* ip, int port);

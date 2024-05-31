@@ -11,6 +11,7 @@
 #include "router.h"
 #include "parser.h"
 #include "connection.h"
+#include "enable_logs.h"
 
 Device initDevice(const char *interface, const char *ip, int mask) {
     Device device;
@@ -41,12 +42,17 @@ void *send_on_broadcast(void *threadBroadcastArg){
     ThreadBroadcastArg *thread_arg = (ThreadBroadcastArg *)threadBroadcastArg;
     Routing_table *routing_table_send;
     char *routing_table_send_str;
+    char* buffer;
+
     while (1) {
         routing_table_send = copy_routing_table(thread_arg->router->routing_table);
         fill_empty_gateways(routing_table_send, thread_arg->device->ip);
+        buffer = routing_table_to_buffer(routing_table_send);
+        broadcast_send_message(buffer, thread_arg->broadcast_adrr, BROADCAST_PORT);
         routing_table_send_str = displayRoutingTable(routing_table_send);
-        broadcast_send_message(routing_table_send_str, thread_arg->broadcast_adrr, BROADCAST_PORT);
-        printf( "%s_%s    Broadcast on %s:%i send its routing table\n%s", thread_arg->router->name, thread_arg->device->interface, thread_arg->broadcast_adrr, BROADCAST_PORT, routing_table_send_str);
+        if (enable_logs){
+            printf( "%s_%s    Broadcast on %s:%i send its routing table\n%s", thread_arg->router->name, thread_arg->device->interface, thread_arg->broadcast_adrr, BROADCAST_PORT, routing_table_send_str);
+        }
         sleep(INTERVAL);
     }
     free(routing_table_send_str);
@@ -150,7 +156,9 @@ void *deviceThread(void *threadDevicesArg) {
                 exit(EXIT_FAILURE);
             }
 
-            printf("%s_%s    Connection accepted from %s:%d\n", thread_arg->router->name, thread_arg->device->interface, inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+            //if (enable_logs){
+                printf("%s_%s    Connection accepted from %s:%d\n", thread_arg->router->name, thread_arg->device->interface, inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+            //}
 
             // Réception des données du client
             bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
@@ -163,8 +171,8 @@ void *deviceThread(void *threadDevicesArg) {
 
             // Traitement des données reçues (exemple de vérification)
             //if (strcmp(buffer, "broadcast") == 0) {
-            //const char *message = "hello world";
-            //send(clientSocket, message, strlen(message), 0);
+            const char *message = "hello world";
+            send(clientSocket, message, strlen(message), 0);
             //printf("%s_%s    Sent: \n%s\n", thread_arg->router->name,device->interface, message);
             //}
 
@@ -220,13 +228,15 @@ void *deviceThread(void *threadDevicesArg) {
             updateRoutingTable(thread_arg->router, routing_table);
 
             // Libérer la mémoire allouée pour la table de routage
-            destroyRoutingTable(routing_table);
 
             // Réafficher la table de routage mise à jour
-            char *routing_table_str = displayRoutingTable(thread_arg->router->routing_table);
-            printf( "%s_%s    Broadcast on %s:%i received a routing table\n"
-                    "%s         Updated routing table :  \n%s", thread_arg->router->name, thread_arg->device->interface, broadcast_adrr, BROADCAST_PORT, thread_arg->router->name, routing_table_str);
-            free(routing_table_str);
+            if (enable_logs){
+                char *routing_table_str = displayRoutingTable(thread_arg->router->routing_table);
+                printf( "%s_%s    Broadcast on %s:%i received a routing table\n"
+                        "%s         Updated routing table :  \n%s", thread_arg->router->name, thread_arg->device->interface, broadcast_adrr, BROADCAST_PORT, thread_arg->router->name, routing_table_str);
+                free(routing_table_str);
+            }
+            destroyRoutingTable(routing_table);
         }
     }
 

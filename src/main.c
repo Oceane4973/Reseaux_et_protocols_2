@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include "parser.h"
 #include "router.h"
+#include <stdbool.h>
 
 int main() {
     // Ouverture du fichier YAML

@@ -10,6 +10,7 @@
 #include "router.h"
 #include "parser.h"
 #include "connection.h"
+#include "enable_logs.h"
 
 Router initRouter(const char *name, int port, Device *devices, int num_devices) {
     Router router;
@@ -31,7 +32,6 @@ Router initRouter(const char *name, int port, Device *devices, int num_devices) 
 
     char routing_table_path[MAX_PATH_LENGTH];
     sprintf(routing_table_path, "%s%s/routing_table.yaml", GLOBAL_ROUTING_TABLE_PATH, name);
-    
     router.routing_table = initRoutingTable(routing_table_path);
 
     return router;
@@ -123,6 +123,7 @@ char* calculate_broadcast_address(const char* ip_address, const int cidr) {
     unsigned long broadcast = (ip & subnet_mask) | (~subnet_mask);
 
     // Conversion de l'adresse de diffusion en format de chaîne
+
     sprintf(broadcast_address, "%lu.%lu.%lu.%lu",
             (broadcast >> 24) & 0xFF,
             (broadcast >> 16) & 0xFF,
@@ -184,13 +185,11 @@ void fill_empty_gateways(Routing_table *routing_table, const char *default_gatew
 
     for (int i = 0; i < routing_table->num_route; i++) {
         Route *route = &routing_table->table[i];
-        if (!route->passerelle || strcmp(route->passerelle, "") == 0) {
-            free(route->passerelle); // Libérer la mémoire de la passerelle actuelle si nécessaire
-            route->passerelle = strdup(default_gateway); // Copier la nouvelle passerelle
-            if (!route->passerelle) {
-                perror("Failed to allocate memory for gateway");
-                exit(EXIT_FAILURE);
-            }
+        free(route->passerelle); // Libérer la mémoire de la passerelle actuelle si nécessaire
+        route->passerelle = strdup(default_gateway); // Copier la nouvelle passerelle
+        if (!route->passerelle) {
+            perror("Failed to allocate memory for gateway");
+            exit(EXIT_FAILURE);
         }
     }
 }

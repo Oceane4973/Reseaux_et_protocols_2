@@ -28,7 +28,7 @@ Connection broadcast_connection(char* ip, int port){
     return co;
 }
 
-Connection standard_connection(char* ip, int port){
+Connection standard_connection(char* ip, int port) {
     int tcpSocket;
     struct sockaddr_in tcpAddr;
 
@@ -37,6 +37,7 @@ Connection standard_connection(char* ip, int port){
         exit(EXIT_FAILURE);
     }
 
+    memset(&tcpAddr, 0, sizeof(tcpAddr));
     tcpAddr.sin_family = AF_INET;
     tcpAddr.sin_addr.s_addr = inet_addr(ip);
     tcpAddr.sin_port = htons(port);
@@ -47,68 +48,47 @@ Connection standard_connection(char* ip, int port){
     return co;
 }
 
+void send_message_on_standard_socket(char* message, char* ip, int port) {
+    Connection socket = standard_connection(ip, port);
+
+    // Connecter le socket
+    if (connect(socket.socket_id, (struct sockaddr *)&socket.addr, sizeof(socket.addr)) < 0) {
+        perror("Connection failed : send_message_on_standard_socket()");
+        close(socket.socket_id);
+        exit(EXIT_FAILURE);
+    }
+
+    // Envoyer le message
+    if (send(socket.socket_id, message, strlen(message), 0) < 0) {
+        perror("Send failed : send_message_on_standard_socket()");
+        close(socket.socket_id);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Message sent successfully\n");
+
+    close(socket.socket_id);
+}
+
 void broadcast_send_message(char* message, char* ip, int port){
+    if (strcmp("127.0.0.255", ip) == 0) {
+        return; 
+    }
+        
     Connection socket = broadcast_connection(ip, port);
-    
-    // Envoi du message de diffusion au serveur
-    if (sendto(socket.socket_id, message, strlen(message), 0, (struct sockaddr *)&socket.addr, sizeof(socket.addr)) < 0) {
+        
+        // Envoi du message de diffusion au serveur
+    struct sockaddr_in broadcast_addr;
+    memset(&broadcast_addr, 0, sizeof(broadcast_addr));
+    broadcast_addr.sin_family = AF_INET;
+    broadcast_addr.sin_addr.s_addr = inet_addr(ip);
+    broadcast_addr.sin_port = htons(port);
+
+    if (sendto(socket.socket_id, message, strlen(message), 0, (struct sockaddr *)&broadcast_addr, sizeof(broadcast_addr)) < 0) {
         perror("Send failed : broadcast_send_message() ");
         close(socket.socket_id);
         exit(EXIT_FAILURE);
     }
-    //printf("Client sent: %s\n", message);
 
     close(socket.socket_id);
-}
-
-void broadcast_send_file(char* filename, char* ip, int port){
-    Connection socket = broadcast_connection(ip, port);
-
-    // Connect to server
-    if (connect(socket.socket_id, (struct sockaddr *)&socket.addr, sizeof(socket.addr)) == -1) {
-        perror("Failed to connect to server");
-        exit(EXIT_FAILURE);
-    }
-
-    // Receive and print YAML file
-    //receive_and_print_yaml(client_socket);
-    send_yaml_file(filename, socket.socket_id);
-
-    // Close socket
-    close(socket.socket_id);
-}
-
-void send_yaml_file(const char *filename, int socket) {
-    FILE *file = fopen(filename, "r");
-    if (!file) {
-        perror("Failed to open file");
-        exit(EXIT_FAILURE);
-    }
-
-    char buffer[BUFFER_SIZE];
-    size_t bytes_read;
-    while ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0) {
-        if (send(socket, buffer, bytes_read, 0) == -1) {
-            perror("Failed to send data");
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    printf("Client sent buffer : \n%s\n", buffer);
-
-    fclose(file);
-}
-
-void receive_and_print_yaml(int socket) {
-    char buffer[BUFFER_SIZE];
-    ssize_t bytes_received;
-
-    while ((bytes_received = recv(socket, buffer, sizeof(buffer), 0)) > 0) {
-        fwrite(buffer, 1, bytes_received, stdout);
-    }
-
-    if (bytes_received == -1) {
-        perror("Failed to receive data");
-        exit(EXIT_FAILURE);
-    }
 }

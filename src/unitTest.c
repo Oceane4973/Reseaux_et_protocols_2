@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h> // Ajout de l'inclusion de stdlib.h
+#include "main.h"
 #include "router.h"
 #include "parser.h"
 
