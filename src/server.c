@@ -20,7 +20,6 @@ void *start_server(void *arg) {
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     char buffer[1024] = {0};
-    char *confirmation_message = "Message received";
 
     Connection socketConnection = standard_connection(server->ip, server->port);
     socklen_t tcp_addr_len = sizeof(socketConnection.addr);
@@ -50,10 +49,9 @@ void *start_server(void *arg) {
             continue;
         }
 
-        printf("%s         Received message: %s\n", server->name, buffer);
-
-        send(new_socket, confirmation_message, strlen(confirmation_message), 0);
-        printf("%s         Confirmation message sent\n", server->name);
+        printf( "-------------------------------------------------\n"
+                "%s         Received message: \n%s\n"
+                "-------------------------------------------------\n", server->name, buffer);
 
         close(new_socket);
     }

@@ -12,6 +12,7 @@
 #include "parser.h"
 #include "connection.h"
 #include "enable_logs.h"
+#include "tram.h"
 
 Device initDevice(const char *interface, const char *ip, int mask) {
     Device device;
@@ -169,10 +170,15 @@ void *deviceThread(void *threadDevicesArg) {
             }
             buffer[bytesReceived] = '\0'; // Assurez-vous que le tampon est nul-terminé
 
-            // Traitement des données reçues (exemple de vérification)
-            //if (strcmp(buffer, "broadcast") == 0) {
-            const char *message = "hello world";
-            send(clientSocket, message, strlen(message), 0);
+            Tram *tram = buffer_to_tram(buffer);
+            
+            char *tram_str = display_tram(tram);
+
+            printf("%s_%s    Receveid: %s\n", thread_arg->router->name, thread_arg->device->interface, tram_str);
+            
+            free(tram_str);
+            destroyTram(tram);
+            
             //printf("%s_%s    Sent: \n%s\n", thread_arg->router->name,device->interface, message);
             //}
 

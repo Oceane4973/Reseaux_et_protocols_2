@@ -48,7 +48,7 @@ Connection standard_connection(char* ip, int port) {
     return co;
 }
 
-void send_message_on_standard_socket(char* message, char* ip, int port) {
+void send_message_on_standard_socket(char* message, size_t message_size, char* ip, int port) {
     Connection socket = standard_connection(ip, port);
 
     // Connecter le socket
@@ -59,8 +59,13 @@ void send_message_on_standard_socket(char* message, char* ip, int port) {
     }
 
     // Envoyer le message
-    if (send(socket.socket_id, message, strlen(message), 0) < 0) {
+    ssize_t bytes_sent = send(socket.socket_id, message, message_size, 0);
+    if (bytes_sent < 0) {
         perror("Send failed : send_message_on_standard_socket()");
+        close(socket.socket_id);
+        exit(EXIT_FAILURE);
+    } else if ((size_t)bytes_sent != message_size) {
+        fprintf(stderr, "Incomplete send : send_message_on_standard_socket()");
         close(socket.socket_id);
         exit(EXIT_FAILURE);
     }
