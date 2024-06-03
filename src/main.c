@@ -8,7 +8,6 @@
 #include "server.h"
 
 int main() {
-    // Ouverture du fichier YAML pour les routeurs
     FILE *routers_file = fopen("config/routers_config.yaml", "r");
     if (!routers_file) {
         perror("Failed to open routers_file");

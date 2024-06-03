@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
-#include <stdlib.h> // Ajout de l'inclusion de stdlib.h
+#include <stdlib.h> 
 #include "server.h"
 #include "router.h"
 #include "parser.h"
@@ -28,8 +28,7 @@ int main() {
 void test_calculate_broadcast_address() {
     const char* ip_address = "192.168.2.5";
     const int cidr = 24;
-    const char* expected_broadcast_address = "192.168.2.255"; // Adresse de diffusion attendue
-   
+    const char* expected_broadcast_address = "192.168.2.255";
     char* broadcast_address = calculate_broadcast_address(ip_address, cidr);
     
     assert(broadcast_address != NULL);
@@ -43,8 +42,7 @@ void test_calculate_broadcast_address() {
 void test_calculate_network_address() {
     const char* ip_address = "192.168.2.5";
     const int cidr = 24;
-    const char* expected_network_address = "192.168.2.0"; // Adresse de réseau attendue
-
+    const char* expected_network_address = "192.168.2.0"; 
     char* network_address = calculate_network_address(ip_address, cidr);
 
     assert(network_address != NULL);
@@ -187,14 +185,12 @@ void test_yaml_file_parser_to_routing_table(){
 }
 
 void test_updateRoutingTable(){
-    //création d'un routeur
     Device devices[] = {
         initDevice("eth0", "127.0.0.1", 24),
         initDevice("eth1", "192.1.1.2", 24)
     };
     Router my_router = initRouter("R1", 8000, devices, 2);
 
-    //creation d'une table de routage
     const char *yaml_content = 
     "routes:\n"
     "  - destination: 127.0.0.0\n"
@@ -222,9 +218,6 @@ void test_updateRoutingTable(){
 
     updateRoutingTable(&my_router, routing_table);
 
-    //char *routing_table_str = displayRoutingTable(my_router.routing_table);
-    //printf("%s", routing_table_str);
-
     assert(my_router.routing_table->num_route == 3);
 
     assert(strcmp(my_router.routing_table->table[0].destination, "127.0.0.0") == 0);
@@ -238,7 +231,6 @@ void test_updateRoutingTable(){
     
     printf("Test Passed: update_routing_table().\n");
 
-    //free(routing_table_str);
     destroyRoutingTable(routing_table);
     destroyRouter(&my_router);
 }
@@ -259,7 +251,6 @@ void test_yaml_file_parser_to_server() {
 
     Server *server = parse_yaml_file_to_server(file);
 
-    // Assertions to verify the parsed server data
     assert(strcmp(server->name, "S1") == 0);
     assert(server->port == 8080);
     assert(strcmp(server->ip, "172.16.180.2") == 0);
@@ -267,6 +258,5 @@ void test_yaml_file_parser_to_server() {
 
     printf("Test Passed: yaml_file_parser_to_server().\n");
 
-    // Clean up
     destroyServer(server);
 }

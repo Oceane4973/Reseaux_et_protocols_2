@@ -44,6 +44,5 @@ void send_tram() {
     char *ip = "10.1.6.2";
     int port = 8520;
 
-    // Envoyer le message sur le socket en utilisant la taille correcte du buffer
     send_message_on_standard_socket(message, strlen(message),ip, port);
 }

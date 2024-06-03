@@ -14,18 +14,17 @@
 
 Router initRouter(const char *name, int port, Device *devices, int num_devices) {
     Router router;
-    router.name = strdup(name); // Allouer et copier le nom du routeur
+    router.name = strdup(name);
     router.port = port;
 
-    // Allouer de la mémoire pour les dispositifs et copier les données
     router.devices = malloc(num_devices * sizeof(Device));
     if (!router.devices) {
         perror("Failed to allocate memory for router devices");
         exit(EXIT_FAILURE);
     }
     for (int i = 0; i < num_devices; ++i) {
-        router.devices[i].interface = strdup(devices[i].interface); // Allouer et copier l'interface
-        router.devices[i].ip = strdup(devices[i].ip); // Allouer et copier l'adresse IP
+        router.devices[i].interface = strdup(devices[i].interface); 
+        router.devices[i].ip = strdup(devices[i].ip);
         router.devices[i].mask = devices[i].mask;
     }
     router.num_devices = num_devices;
@@ -39,11 +38,11 @@ Router initRouter(const char *name, int port, Device *devices, int num_devices) 
 
 void destroyRouter(Router *router) {
     for (int i = 0; i < router->num_devices; ++i) {
-        destroyDevice(&(router->devices[i])); // Détruire les dispositifs
+        destroyDevice(&(router->devices[i]));
     }
     destroyRoutingTable(router->routing_table);
     free(router->devices);
-    free(router->name); // Libérer la mémoire du nom du routeur
+    free(router->name);
 
     router->devices = NULL;
     router->routing_table = NULL;
@@ -57,21 +56,17 @@ void *startRouter(void *threadRouterArg) {
     pthread_t threads[router.num_devices];
 
     for (int i = 0; i < router.num_devices; i++) {
-        // Allocation mémoire pour la structure ThreadArg
         ThreadDevicesArg *thread_arg = malloc(sizeof(ThreadDevicesArg));
         if (thread_arg == NULL) {
             perror("Memory allocation failed");
             exit(EXIT_FAILURE);
         }
         
-        // Copie du périphérique
         thread_arg->device = malloc(sizeof(Device));
         memcpy(thread_arg->device, &router.devices[i], sizeof(Device));
 
-        // Assignation du port
         thread_arg->router = &router;
 
-        // Création du thread avec la structure comme argument
         if (pthread_create(&threads[i], NULL, deviceThread, thread_arg) != 0) {
             perror("Thread creation failed");
             exit(EXIT_FAILURE);
@@ -92,26 +87,20 @@ void *startRouter(void *threadRouterArg) {
 }
 
 char* calculate_broadcast_address(const char* ip_address, const int cidr) {
-    // Vérification des arguments
     if (ip_address == NULL || cidr < 0 || cidr > 32) {
         return NULL;
     }
 
-    // Allocation de mémoire pour l'adresse de diffusion
-    char* broadcast_address = (char*)malloc(16 * sizeof(char)); // 16 pour une adresse IP IPv4 maximale
-
+    char* broadcast_address = (char*)malloc(16 * sizeof(char)); 
     if (broadcast_address == NULL) {
-        return NULL; // Échec de l'allocation de mémoire
+        return NULL; 
     }
 
-    // Copie de l'adresse IP dans une variable modifiable
-    char ip_copy[16]; // 16 pour une adresse IP IPv4 maximale
+    char ip_copy[16];
     strcpy(ip_copy, ip_address);
 
-    // Calcul du masque de sous-réseau
     unsigned long subnet_mask = 0xFFFFFFFFUL << (32 - cidr);
 
-    // Conversion de l'adresse IP en entier sans le CIDR
     unsigned long ip = 0;
     char* token = strtok(ip_copy, ".");
     for (int i = 0; i < 4 && token != NULL; i++) {
@@ -119,10 +108,7 @@ char* calculate_broadcast_address(const char* ip_address, const int cidr) {
         token = strtok(NULL, ".");
     }
 
-    // Calcul de l'adresse de diffusion
     unsigned long broadcast = (ip & subnet_mask) | (~subnet_mask);
-
-    // Conversion de l'adresse de diffusion en format de chaîne
 
     sprintf(broadcast_address, "%lu.%lu.%lu.%lu",
             (broadcast >> 24) & 0xFF,
@@ -143,13 +129,11 @@ void updateRoutingTable(Router *router, Routing_table *routing_table) {
         new_route->distance++;
         int found = 0;
 
-        // Check if the destination is already in the router's routing table
         for (int j = 0; j < router->routing_table->num_route; j++) {
             Route *existing_route = &router->routing_table->table[j];
 
             if (strcmp(existing_route->destination, new_route->destination) == 0 && existing_route->mask == new_route->mask) {
                 found = 1;
-                // Compare distances and update if the new distance is shorter
                 if (new_route->distance < existing_route->distance) {
                     existing_route->distance = new_route->distance;
                     if (existing_route->passerelle) free(existing_route->passerelle);
@@ -161,7 +145,6 @@ void updateRoutingTable(Router *router, Routing_table *routing_table) {
             }
         }
 
-        // If the destination is not found, add the new route
         if (!found) {
             router->routing_table->table = realloc(router->routing_table->table, (router->routing_table->num_route + 1) * sizeof(Route));
             if (!router->routing_table->table) {
@@ -185,8 +168,8 @@ void fill_empty_gateways(Routing_table *routing_table, const char *default_gatew
 
     for (int i = 0; i < routing_table->num_route; i++) {
         Route *route = &routing_table->table[i];
-        free(route->passerelle); // Libérer la mémoire de la passerelle actuelle si nécessaire
-        route->passerelle = strdup(default_gateway); // Copier la nouvelle passerelle
+        free(route->passerelle); 
+        route->passerelle = strdup(default_gateway); 
         if (!route->passerelle) {
             perror("Failed to allocate memory for gateway");
             exit(EXIT_FAILURE);
@@ -203,13 +186,11 @@ char* calculate_network_address(const char *ip_str, int cidr_mask) {
     struct in_addr ip_addr, network_addr;
     unsigned long mask = (cidr_mask == 0) ? 0 : (~0U << (32 - cidr_mask)) & 0xFFFFFFFF;
 
-    // Convertir la chaîne IP en adresse binaire
     if (inet_pton(AF_INET, ip_str, &ip_addr) <= 0) {
         perror("Invalid IP address");
         return NULL;
     }
 
-    // Calculer l'adresse de réseau en appliquant un ET binaire entre l'IP et le masque
     network_addr.s_addr = ip_addr.s_addr & htonl(mask);
 
     char *network_str = (char*)malloc(INET_ADDRSTRLEN);

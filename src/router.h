@@ -12,7 +12,6 @@
 #define BROADCAST_PORT 1900
 #define MAX_PATH_LENGTH 100
 
-// Structure représentant le routeur
 typedef struct {
     char *name;
     int port;
@@ -43,7 +42,6 @@ typedef struct {
     Router * router;
 } ThreadBroadcastArg;
 
-// Déclaration des fonctions
 Router initRouter(const char *name, int port, Device *devices, int num_devices);
 void destroyRouter(Router *router);
 void *startRouter(void *ThreadRouterArg);
