@@ -193,3 +193,36 @@ void fill_empty_gateways(Routing_table *routing_table, const char *default_gatew
         }
     }
 }
+
+char* calculate_network_address(const char *ip_str, int cidr_mask) {
+    if (!ip_str) {
+        fprintf(stderr, "IP address is NULL\n");
+        return NULL;
+    }
+
+    struct in_addr ip_addr, network_addr;
+    unsigned long mask = (cidr_mask == 0) ? 0 : (~0U << (32 - cidr_mask)) & 0xFFFFFFFF;
+
+    // Convertir la chaîne IP en adresse binaire
+    if (inet_pton(AF_INET, ip_str, &ip_addr) <= 0) {
+        perror("Invalid IP address");
+        return NULL;
+    }
+
+    // Calculer l'adresse de réseau en appliquant un ET binaire entre l'IP et le masque
+    network_addr.s_addr = ip_addr.s_addr & htonl(mask);
+
+    char *network_str = (char*)malloc(INET_ADDRSTRLEN);
+    if (!network_str) {
+        perror("Memory allocation failed");
+        return NULL;
+    }
+
+    if (inet_ntop(AF_INET, &network_addr, network_str, INET_ADDRSTRLEN) == NULL) {
+        perror("inet_ntop");
+        free(network_str);
+        return NULL;
+    }
+
+    return network_str;
+}

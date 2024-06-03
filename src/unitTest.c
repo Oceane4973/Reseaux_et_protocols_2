@@ -11,6 +11,7 @@ void test_device_and_router_constructors();
 void test_yaml_file_parser_to_routing_table();
 void test_updateRoutingTable();
 void test_yaml_file_parser_to_server();
+void test_calculate_network_address();
 
 int main() {
     test_device_and_router_constructors();
@@ -19,6 +20,7 @@ int main() {
     test_yaml_file_parser_to_routing_table();
     test_updateRoutingTable();
     test_yaml_file_parser_to_server();
+    test_calculate_network_address();
     
     return 0;
 }
@@ -36,6 +38,21 @@ void test_calculate_broadcast_address() {
     printf("Test Passed: calculate_broadcast_address().\n");
     
     free(broadcast_address);
+}
+
+void test_calculate_network_address() {
+    const char* ip_address = "192.168.2.5";
+    const int cidr = 24;
+    const char* expected_network_address = "192.168.2.0"; // Adresse de réseau attendue
+
+    char* network_address = calculate_network_address(ip_address, cidr);
+
+    assert(network_address != NULL);
+    assert(strcmp(network_address, expected_network_address) == 0);
+
+    printf("Test Passed: calculate_network_address().\n");
+
+    free(network_address);
 }
 
 void test_device_and_router_constructors() {

@@ -15,29 +15,6 @@ void destroyTram(Tram *tram) {
     }
 }
 
-char* tram_to_buffer(const Tram *tram) {
-    if (!tram) {
-        fprintf(stderr, "Tram is NULL\n");
-        return NULL;
-    }
-
-    // Allouer de la mémoire pour le buffer
-    char *buffer = (char*)malloc(MAX_BUFFER_SIZE);
-    if (!buffer) {
-        perror("Memory allocation failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // Formatage du Tram dans le buffer
-    snprintf(buffer, MAX_BUFFER_SIZE, "Destination: %s\nOrigin: %s\nPort: %d\nMessage: %s\n",
-             tram->destination ? tram->destination : "NULL",
-             tram->origin ? tram->origin : "NULL",
-             tram->port,
-             tram->message ? tram->message : "NULL");
-
-    return buffer;
-}
-
 Tram* buffer_to_tram(const char *buffer) {
     if (!buffer) {
         fprintf(stderr, "Buffer is NULL\n");
@@ -70,6 +47,32 @@ Tram* buffer_to_tram(const char *buffer) {
     return tram;
 }
 
+char* tram_to_buffer(const Tram *tram) {
+    if (!tram) {
+        fprintf(stderr, "Tram is NULL\n");
+        return NULL;
+    }
+
+    // Allouer de la mémoire pour le buffer
+    char *buffer = (char*)malloc(MAX_BUFFER_SIZE);
+    if (!buffer) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Initialiser le buffer avec une chaîne vide
+    buffer[0] = '\0';
+
+    // Formatage du Tram dans le buffer
+    snprintf(buffer, MAX_BUFFER_SIZE, "Destination: %s\nOrigin: %s\nPort: %d\nMessage: %s\n",
+             tram->destination ? tram->destination : "NULL",
+             tram->origin ? tram->origin : "NULL",
+             tram->port,
+             tram->message ? tram->message : "NULL");
+
+    return buffer;
+}
+
 char* display_tram(Tram *tram) {
     if (!tram) {
         return strdup("Tram is NULL.\n");
@@ -87,7 +90,7 @@ char* display_tram(Tram *tram) {
     // Formater les informations de tram dans une chaîne
     char info[256];
     snprintf(info, sizeof(info),
-        "{ Destination: %s, Origin: %s, Port: %d, Message: %s }\n",
+        "{ Destination: %s, Origin: %s, Port: %d, Message: %s }",
         tram->destination, tram->origin, tram->port, tram->message);
 
     // Vérifier si la taille de la chaîne résultante dépasse la taille du buffer

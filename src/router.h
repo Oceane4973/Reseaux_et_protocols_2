@@ -51,5 +51,6 @@ void updateRoutingTable(Router *router, Routing_table *routing_table);
 
 char* calculate_broadcast_address(const char* ip_address, const int cidr);
 void fill_empty_gateways(Routing_table *routing_table, const char *default_gateway);
+char* calculate_network_address(const char *ip_str, int cidr_mask);
 
 #endif

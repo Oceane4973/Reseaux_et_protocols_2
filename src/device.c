@@ -72,6 +72,7 @@ void *deviceThread(void *threadDevicesArg) {
 
     // Accès au périphérique et au port à partir de la structure
     char buffer[MAX_BUFFER_SIZE];
+    char buffer_tram[MAX_BUFFER_SIZE];
     ssize_t bytesReceived;
     fd_set readfds;
     int max_fd;
@@ -162,25 +163,58 @@ void *deviceThread(void *threadDevicesArg) {
             //}
 
             // Réception des données du client
-            bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+            bytesReceived = recv(clientSocket, buffer_tram, sizeof(buffer_tram) - 1, 0);
             if (bytesReceived < 0) {
                 perror("Receive failed");
                 close(clientSocket);
                 continue;
             }
-            buffer[bytesReceived] = '\0'; // Assurez-vous que le tampon est nul-terminé
+            
+            buffer_tram[bytesReceived] = '\0'; // Assurez-vous que le tampon est nul-terminé
 
-            Tram *tram = buffer_to_tram(buffer);
-            
-            char *tram_str = display_tram(tram);
+            Tram *tram = buffer_to_tram(buffer_tram);
 
-            printf("%s_%s    Receveid: %s\n", thread_arg->router->name, thread_arg->device->interface, tram_str);
+            if (tram != NULL){
             
-            free(tram_str);
-            destroyTram(tram);
+                char *tram_str = display_tram(tram);
+
+                printf("%s_%s    Receveid: %s\n", thread_arg->router->name, thread_arg->device->interface, tram_str);
+                
+                if (strcmp(tram->destination, thread_arg->device->ip) ==0 ){
+                    printf( "-------------------------------------------------\n"
+                    "%s_%s    Received message: \n%s\n"
+                    "-------------------------------------------------\n", thread_arg->router->name, thread_arg->device->interface, tram->message);
+                } else {
+                    for (int i = 0; i < thread_arg->router->routing_table->num_route; ++i) {
+                        Route *route = &thread_arg->router->routing_table->table[i];
+
+                        if (strcmp(calculate_network_address(tram->destination, route->mask), route->destination)==0) {
+                            char* gateway = route->passerelle ? route->passerelle : route->interface;
+                            printf("%s_%s    Message received for another network. Forwarding via gateway: %s\n", thread_arg->router->name, thread_arg->device->interface, gateway);
+                        }
+                    }
+                }
+
+                
+
+
+                
+
+
             
-            //printf("%s_%s    Sent: \n%s\n", thread_arg->router->name,device->interface, message);
-            //}
+
+
+
+
+
+
+
+                free(tram_str);
+                destroyTram(tram);
+                
+                //printf("%s_%s    Sent: \n%s\n", thread_arg->router->name,device->interface, message);
+                //}
+            }
 
             // Fermeture de la connexion avec le client
             close(clientSocket);

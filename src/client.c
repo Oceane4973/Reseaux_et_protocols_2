@@ -4,18 +4,18 @@ void hello_world();
 void send_tram();
 
 int main() {
-    send_tram();
     //hello_world();
+    send_tram();
 
     return 0;
 }
 
 void hello_world(){
     char* message = "Hello, World!";
-    char* ip = "10.1.6.2";
-    int port = 8520;
+    char* ip = "172.16.180.2";
+    int port = 8080;
 
-    send_message_on_standard_socket(message, sizeof(message), ip, port);
+    send_message_on_standard_socket(message, strlen(message), ip, port);
 }
 
 void send_tram() {
@@ -26,7 +26,7 @@ void send_tram() {
     }
 
     // Initialiser les champs de la structure Tram
-    tram->destination = "Destination";
+    tram->destination = "172.16.180.1";
     tram->origin = "Origin";
     tram->port = 8080;
     tram->message = "Hello";
@@ -38,5 +38,5 @@ void send_tram() {
     int port = 8520;
 
     // Envoyer le message sur le socket en utilisant la taille correcte du buffer
-    send_message_on_standard_socket(message, sizeof(message),ip, port);
+    send_message_on_standard_socket(message, strlen(message),ip, port);
 }
