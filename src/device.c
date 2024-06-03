@@ -189,25 +189,22 @@ void *deviceThread(void *threadDevicesArg) {
                         Route *route = &thread_arg->router->routing_table->table[i];
 
                         if (strcmp(calculate_network_address(tram->destination, route->mask), route->destination)==0) {
-                            char* gateway = route->passerelle ? route->passerelle : route->interface;
-                            printf("%s_%s    Message received for another network. Forwarding via gateway: %s\n", thread_arg->router->name, thread_arg->device->interface, gateway);
+                            char* gateway= route->passerelle;
+                            int port= thread_arg->router->port;
+                            if (strcmp(gateway, "")==0){
+                                gateway = route->interface;
+                            }
+                            if (strcmp(thread_arg->device->ip, gateway)==0){
+                                gateway = tram->destination;
+                                port = tram->port;
+                            }
+                            printf("%s_%s    Message received for another network. Forwarding via gateway: %s:%i\n", thread_arg->router->name, thread_arg->device->interface, gateway, port);
+                            char* message = tram_to_buffer(tram);
+                            send_message_on_standard_socket(message, strlen(message), gateway, port);
+                            printf("%s_%s    Send message to %s\n", thread_arg->router->name, thread_arg->device->interface, gateway);
                         }
                     }
                 }
-
-                
-
-
-                
-
-
-            
-
-
-
-
-
-
 
                 free(tram_str);
                 destroyTram(tram);

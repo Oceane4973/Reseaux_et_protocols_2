@@ -70,8 +70,6 @@ void send_message_on_standard_socket(char* message, size_t message_size, char* i
         exit(EXIT_FAILURE);
     }
 
-    printf("Message sent successfully\n");
-
     close(socket.socket_id);
 }
 

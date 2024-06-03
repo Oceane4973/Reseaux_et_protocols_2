@@ -1,4 +1,13 @@
 #include "connection.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <net/if.h>
 
 void hello_world();
 void send_tram();
@@ -25,13 +34,11 @@ void send_tram() {
         exit(EXIT_FAILURE);
     }
 
-    // Initialiser les champs de la structure Tram
-    tram->destination = "172.16.180.1";
-    tram->origin = "Origin";
+    tram->destination = "172.16.180.2";
+    tram->origin = "127.0.0.1";
     tram->port = 8080;
     tram->message = "Hello";
 
-    // Convertir la structure Tram en buffer
     char* message = tram_to_buffer(tram);
 
     char *ip = "10.1.6.2";

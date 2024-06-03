@@ -34,15 +34,7 @@ Tram* buffer_to_tram(const char *buffer) {
     tram->message = NULL;
 
     // Analyser le buffer pour extraire les informations du Tram
-    int result = sscanf(buffer, "Destination: %ms\nOrigin: %ms\nPort: %d\nMessage: %ms\n",
-                       &tram->destination, &tram->origin, &tram->port, &tram->message);
-
-    // Vérifier si la lecture a réussi
-    /**if (result != 4) {
-        fprintf(stderr, "Failed to parse Tram from buffer\n");
-        free(tram);  // Libérer la mémoire allouée
-        return NULL;
-    }**/
+    sscanf(buffer, "Destination: %ms\nOrigin: %ms\nPort: %d\nMessage: %ms\n", &tram->destination, &tram->origin, &tram->port, &tram->message);
 
     return tram;
 }

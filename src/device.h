@@ -3,7 +3,7 @@
 
 #include "router.h"
 
-#define INTERVAL 10
+#define INTERVAL 5
 
 typedef struct {
     char *interface;
