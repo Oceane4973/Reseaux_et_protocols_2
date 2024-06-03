@@ -9,7 +9,7 @@ L'objectif principal de ce projet est de créer une simulation réaliste d'un r�
 
 ## DEmonstration
 
-Observez le comportement du code en visionnant la vidéo suivante :
+Observez le comportement du code en visionnant la vidéo suivante :[Vidéo de démonstration](https://youtu.be/cL6CKh77HVs)
 
 ## Structure du projet
 
@@ -28,7 +28,7 @@ Observez le comportement du code en visionnant la vidéo suivante :
 
 Chaque adresse IP virtuelle sera associée à un Socket écoutant sur le port 8520. Pour partager les tables de routage, chaque interface du routeur disposera également d'un autre Socket écoutant sur l'adresse de diffusion (broadcast) du réseau auquel il est connecté. En résumé, deux sockets seront déployés par interface pour faciliter la communication et la gestion des routes dans le réseau simulé.
 
-De plus, un serveur est déployer, initialement configurer sur l'adresse 172.16.180.2 et accessible au port 8080.
+De plus, un serveur est déployé, initialement configuré sur l'adresse 172.16.180.2 et accessible au port 8080.
 
 ## Utilisation générale
 
